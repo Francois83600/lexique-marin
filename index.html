@@ -179,7 +179,8 @@ details summary{cursor:pointer;font-weight:800;color:var(--ink)}
 details ul{padding-left:18px}
 details a{color:inherit;overflow-wrap:anywhere}
 /* progress */
-.gauges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.gauges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:600px){.gauges{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .gauge{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 6px;text-align:center}
 .gauge svg{width:84px;height:84px;display:block;margin:0 auto}
 .gauge b{display:block;font:800 1rem/1.1 var(--disp);margin-top:4px}
@@ -199,6 +200,23 @@ details a{color:inherit;overflow-wrap:anywhere}
 @media (prefers-reduced-motion:reduce){.conf{display:none}.pop{animation:none}.fc{transition:none}.fb{transition:none}}
 @media (min-width:600px){.opts:not(.pics){grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:2.4rem}}
 .hidden{display:none!important}
+.due{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:color-mix(in srgb,var(--sea) 12%,var(--card));border:1.5px solid color-mix(in srgb,var(--sea) 40%,transparent);border-radius:16px;padding:12px 14px;margin-top:14px}
+.due svg{width:30px;height:30px;color:var(--seatxt)}
+.due b{display:block;font:800 1.1rem/1.15 var(--disp)}
+.listen{display:grid;place-items:center;padding:30px 16px;gap:10px}
+.listen .bigsay{width:96px;height:96px;border-radius:50%;border:0;background:var(--sea);color:#fff;display:grid;place-items:center;box-shadow:0 6px 0 var(--deep)}
+.listen .bigsay svg{width:46px;height:46px}
+.listen .bigsay:active{transform:translateY(3px);box-shadow:0 3px 0 var(--deep)}
+.sent{padding:26px 18px;text-align:center;font:700 clamp(1.15rem,4.6vw,1.45rem)/1.4 var(--disp);text-wrap:balance}
+.sent u{text-decoration:none;display:inline-block;min-width:4.5em;border-bottom:3px solid var(--sun);color:var(--seatxt)}
+.games{display:grid;gap:10px;margin-top:6px}
+.game{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;width:100%;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 14px}
+.game:hover{border-color:var(--sea)}
+.game .gi{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;color:#fff}
+.game .gi svg{width:28px;height:28px}
+.game b{font:800 1.1rem/1.15 var(--disp);display:block}
+.fbmedia{width:88px}
+.fbmedia img,.fbmedia svg{width:88px;height:66px;object-fit:cover;border-radius:10px;background:#fff;display:block}
 .btabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -4px 10px;padding:0 4px 2px}
 .btabs button{flex:none;border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:5px 12px;font-weight:700;font-size:.85rem;min-height:34px}
 .btabs button[aria-pressed=true]{background:var(--sea);border-color:var(--sea);color:#fff}
@@ -281,7 +299,7 @@ const shuffle=(a,r=Math.random)=>{for(let i=a.length-1;i>0;i--){const j=Math.flo
 function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);h^=h>>>16;return(h>>>0)/4294967296}}
 const today=()=>new Date().toLocaleDateString('sv');
 const KEY='lexmarin.v1';
-const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:'',fm:{},fcfg:{mode:'sig',n:10},wPts:0,fPts:0,secMig:0,dayKey:'',dayScore:0,pushedKey:''};
+const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:'',fm:{},fcfg:{mode:'sig',n:10},wPts:0,fPts:0,secMig:0,dayKey:'',dayScore:0,pushedKey:'',ls:{},fls:{},xm:{},xls:{}};
 let S=load(), W=[], SECS=[], SEC={}, Q=null;
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return Object.assign(structuredClone(FRESH),d)}catch(e){}return structuredClone(FRESH)}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -332,9 +350,15 @@ function sndIcon(){$('#snd').innerHTML=S.sound?'<svg viewBox="0 0 24 24" fill="n
 const box=(id,mode)=>S.m[id]?.[mode]||0;
 function setBox(id,mode,ok){S.m[id]=S.m[id]||{};const b=box(id,mode);S.m[id][mode]=ok?Math.min(5,b+1):Math.max(0,b-2)}
 const qModes=q=>['fr','en','img'].filter(a=>a!==q).map(a=>q+'>'+a);
+const CANSPEAK='speechSynthesis' in window;
 const wordLevel=(id,q)=>Math.max(...qModes(q).map(m=>box(id,m)));
 const mastery=(q,list=W)=>list.length?Math.round(100*list.reduce((s,w)=>s+wordLevel(w.id,q),0)/(5*list.length)):0;
-const allLevel=w=>Math.max(wordLevel(w.id,'fr'),wordLevel(w.id,'en'),wordLevel(w.id,'img'));
+const allLevel=w=>Math.max(wordLevel(w.id,'fr'),wordLevel(w.id,'en'),wordLevel(w.id,'img'),wordLevel(w.id,'audio'));
+/* spaced repetition : a word is due again after 0, 1, 2, 4, 8 or 16 days depending on its level */
+const SRD=[0,1,2,4,8,16];
+const isDue=(lvl,ts)=>!!ts&&Date.now()-ts>=SRD[Math.min(5,lvl)]*864e5-36e5;
+const dueWords=()=>W.filter(w=>S.m[w.id]&&isDue(allLevel(w),S.ls[w.id]));
+const dueFlags=()=>PAV.filter(p=>S.fm[p.id]&&isDue(fLevel(p),S.fls[p.id]));
 const seenCount=()=>W.filter(w=>S.m[w.id]).length;
 
 /* ---------- answer checking ---------- */
@@ -355,10 +379,10 @@ function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)re
 function modal(html,onYes){const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="card pop" role="dialog" aria-modal="true">${html}<div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn ghost" data-no>Annuler</button><button class="btn" data-yes style="background:var(--ko)">Confirmer</button></div></div>`;document.body.appendChild(m);m.querySelector('[data-no]').onclick=()=>m.remove();m.querySelector('[data-yes]').onclick=()=>{m.remove();onYes()};m.onclick=e=>{if(e.target===m)m.remove()}}
 const thumb=w=>`<img src="${esc(w.img)}" alt="" loading="lazy">`;
 let view='home';
-function go(v){view=v;Q=null;FQ=null;hideFb();document.body.classList.remove('inquiz');$('#nav').classList.remove('hidden');document.querySelectorAll('[data-go]').forEach(b=>b.toggleAttribute('aria-current',b.dataset.go===v)&&b.setAttribute('aria-current','page'));({home,play,lex,prog,pav})[v]();scrollTo(0,0)}
+function go(v){view=v;Q=null;FQ=null;MQ=null;hideFb();document.body.classList.remove('inquiz');$('#nav').classList.remove('hidden');document.querySelectorAll('[data-go]').forEach(b=>b.toggleAttribute('aria-current',b.dataset.go===v)&&b.setAttribute('aria-current','page'));({home,play,lex,prog,pav})[v]();scrollTo(0,0)}
 
 /* ---------- HOME ---------- */
-const MODEINFO={en:['Mot anglais','Je lis le mot anglais, je trouve le français'],fr:['Mot français','Je lis le mot français, je trouve l’anglais'],img:['Photo seule','Je vois l’image, je trouve le mot']};
+const MODEINFO={en:['Mot anglais','Je lis le mot anglais, je trouve le français'],fr:['Mot français','Je lis le mot français, je trouve l’anglais'],img:['Photo seule','Je vois l’image, je trouve le mot'],audio:['À l’oreille','J’écoute le mot anglais, je trouve l’image']};
 function home(){
  const r=rankOf(S.pts),nx=RANKS[r+1],pc=nx?Math.round(100*(S.pts-RANKS[r][0])/(nx[0]-RANKS[r][0])):100;
  const dayDone=S.daily===today(),errs=errList().length,goal=100,dp=S.day===today()?S.dayPts:0;
@@ -375,19 +399,21 @@ function home(){
   <div class="kpi"><b>${Math.min(dp,goal)}/${goal}</b><span>objectif du jour</span></div>
   <div class="kpi"><b>${seenCount()}/104</b><span>mots vus</span></div>
  </div>
+ ${(()=>{const n=dueWords().length;return n?`<div class="due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg><span><b>${n} mot${n>1?'s':''} à revoir aujourd’hui</b><span class="mut small">C’est le bon moment pour ne pas les oublier.</span></span><button class="btn" id="godue">Réviser</button></div>`:''})()}
  <button class="btn sun wide" id="daily" style="margin-top:14px;min-height:56px" ${dayDone?'disabled':''}>${dayDone?'Défi du jour relevé : '+(S.dayKey===today()?S.dayScore:0)+' milles':'Défi du jour : les mêmes 10 questions pour tous, points doublés'}</button>
  <div class="card" id="top3" style="margin-top:14px"></div>
  <h2>Jouer</h2>
- <div class="modes">${['en','fr','img'].map(q=>`<button class="mode" data-q="${q}"><span class="ic" style="background:${q==='en'?'#1f3f8f':q==='fr'?'#e2353d':'#fff'}">${q==='img'?thumb(sample):q==='en'?'<span style="width:56px">'+UK+'</span>':'<span style="width:56px">'+FRF+'</span>'}</span><span><b>${MODEINFO[q][0]}</b><span class="mut small">${MODEINFO[q][1]}</span></span><span class="pc">${mastery(q)}%</span></button>`).join('')}</div>
+ <div class="modes">${['en','fr','img'].concat(CANSPEAK?['audio']:[]).map(q=>`<button class="mode" data-q="${q}"><span class="ic" style="background:${q==='en'?'#1f3f8f':q==='fr'?'#e2353d':q==='audio'?'var(--sea)':'#fff'}">${q==='img'?thumb(sample):q==='audio'?'<span style="width:40px;color:#fff">'+SPK+'</span>':q==='en'?'<span style="width:56px">'+UK+'</span>':'<span style="width:56px">'+FRF+'</span>'}</span><span><b>${MODEINFO[q][0]}</b><span class="mut small">${MODEINFO[q][1]}</span></span><span class="pc">${mastery(q)}%</span></button>`).join('')}</div>
  <div class="row wrap" style="margin-top:12px"><button class="btn ghost" id="errs" ${errs?'':'disabled'} style="flex:1">Revoir mes erreurs (${errs})</button><button class="btn ghost" id="cards" style="flex:1">Cartes mémoire</button></div>
  ${S.tipOff?'':`<div class="hint" style="margin-top:18px"><b>Sur iPhone :</b> dans Safari, touche Partager puis « Sur l’écran d’accueil » pour l’ouvrir comme une app. <button class="jk" id="tipx" style="margin-left:6px;min-height:32px">OK</button></div>`}
  <h2>Pavillons</h2>
  <button class="pavcta" id="gopav"><span class="mini">${['A','N','C','Z'].map(flagSvg).join('')}</span><span><b>Pavillons de signalisation</b><span class="mut small">${PAV.length} pavillons du Code international : lexique et quiz à part</span></span><span class="pc">${fMastery()}%</span></button>
  <h2>Badges <span class="mut small">${S.badges.length}/${BADGES.length}</span></h2>
  <div class="badges">${BADGES.slice().sort((a,b)=>S.badges.includes(b[0])-S.badges.includes(a[0])).slice(0,6).map(badgeHtml).join('')}</div>`;
- V.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{const q=b.dataset.q;S.cfg.q=q;S.cfg.a=q==='en'?'fr':q==='fr'?'en':(S.cfg.a==='fr'?'fr':'en');if(S.cfg.fmt==='chrono')S.cfg.fmt='qcm';save();start({...S.cfg})});
+ V.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{const q=b.dataset.q;S.cfg.q=q;S.cfg.a=q==='en'?'fr':q==='fr'?'en':q==='audio'?'img':(S.cfg.a==='fr'?'fr':'en');if(S.cfg.fmt==='chrono')S.cfg.fmt='qcm';save();start({...S.cfg})});
  renderTop3();loadTop3();
  $('#gopav').onclick=()=>go('pav');
+ $('#godue')?.addEventListener('click',()=>start({...S.cfg,q:S.cfg.q==='audio'&&!CANSPEAK?'img':S.cfg.q,fmt:S.cfg.fmt==='chrono'?'qcm':S.cfg.fmt,src:'due',n:Math.min(20,dueWords().length)}));
  $('#daily').onclick=()=>start({q:'mix',a:'mix',fmt:'qcm',n:10,th:[],daily:true});
  $('#errs').onclick=()=>start({...S.cfg,src:'err'});
  $('#cards').onclick=()=>{go('lex');lexMode='cards';lex()};
@@ -401,8 +427,10 @@ function play(){
  const c=S.cfg;
  const seg=(name,opts,cur,dis=[])=>`<div class="seg" data-k="${name}">${opts.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${cur==v}" ${dis.includes(v)?'disabled':''}>${l}</button>`).join('')}</div>`;
  const adis=[c.q].concat(c.fmt!=='qcm'?['img']:[]);
- V.innerHTML=`<h1>Préparer le quiz</h1><p class="mut" style="margin:6px 0 4px">Choisis ce que tu vois et ce que tu dois trouver.</p>
- <span class="lbl">Je vois</span>${seg('q',[['en','Mot anglais'],['fr','Mot français'],['img','Photo seule']],c.q)}
+ V.innerHTML=`<h1>Jouer</h1>
+ <div class="games">${GAMES.map(g=>`<button class="game" data-game="${g.id}"><span class="gi" style="background:${g.col}">${g.icon}</span><span><b>${g.title}</b><span class="mut small">${g.sub}</span></span><span class="pc">${g.pc()}</span></button>`).join('')}</div>
+ <h2>Préparer le quiz des mots</h2><p class="mut" style="margin:-4px 0 4px">Choisis ce que tu vois et ce que tu dois trouver.</p>
+ <span class="lbl">Je vois</span>${seg('q',[['en','Mot anglais'],['fr','Mot français'],['img','Photo seule']].concat(CANSPEAK?[['audio','J’entends']]:[]),c.q)}
  <span class="lbl">Je dois trouver</span>${seg('a',[['fr','Le français'],['en','L’anglais'],['img','La photo']],c.a,adis)}
  <span class="lbl">Format</span>${seg('fmt',[['qcm','4 choix'],['type','J’écris'],['chrono','Chrono 60 s']],c.fmt)}
  <p class="mut small" style="margin:6px 2px 0">${c.fmt==='qcm'?'10 milles par bonne réponse, bonus de vitesse et de série.':c.fmt==='type'?'Points doublés : tu tapes la réponse. Les petites fautes de frappe sont tolérées.':'Réponds au plus vite : +2 s par bonne réponse, −3 s par erreur. Record : '+S.bestChrono+' bonnes réponses.'}</p>
@@ -411,15 +439,17 @@ function play(){
  <div class="chips">${SECS.map(s=>`<button class="chip" data-th="${esc(s.id)}" style="--c:${esc(s.color)}" aria-pressed="${c.th.includes(s.id)}">${esc(s.title)}</button>`).join('')}</div>
  <button class="btn sun wide" id="go" style="margin-top:22px;min-height:58px;font-size:1.15rem">Larguer les amarres</button>
  <p class="mut small" style="text-align:center;margin-top:8px">Les mots que tu connais le moins reviennent plus souvent.</p>`;
- V.querySelectorAll('.seg').forEach(sg=>sg.onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;let v=b.dataset.v;if(sg.dataset.k==='n')v=+v;c[sg.dataset.k]=v;if(c.a===c.q)c.a=c.q==='en'?'fr':'en';if(c.fmt!=='qcm'&&c.a==='img')c.a=c.q==='en'?'fr':'en';save();play()});
+ V.querySelectorAll('.seg').forEach(sg=>sg.onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;let v=b.dataset.v;if(sg.dataset.k==='n')v=+v;c[sg.dataset.k]=v;if(sg.dataset.k==='q'&&v==='audio'&&c.fmt==='qcm')c.a='img';if(c.a===c.q)c.a=c.q==='en'?'fr':'en';if(c.fmt!=='qcm'&&c.a==='img')c.a=c.q==='en'?'fr':'en';save();play()});
  V.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{const id=b.dataset.th;c.th=c.th.includes(id)?c.th.filter(x=>x!==id):[...c.th,id];save();play()});
  $('#go').onclick=()=>start({...c});
+ V.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>GAMES.find(g=>g.id===b.dataset.game).run());
 }
 
 /* ---------- QUIZ ENGINE ---------- */
 function pickPool(cfg){
  let pool=W.filter(w=>!cfg.th?.length||cfg.th.includes(w.s));
  if(cfg.src==='err'){pool=errList();}
+ if(cfg.src==='due'){pool=dueWords();}
  if(!pool.length)pool=W.slice();
  const mode=cfg.q==='mix'?null:cfg.q+'>'+cfg.a;
  return pool.map(w=>({w,k:(mode?box(w.id,mode):allLevel(w))+Math.random()*2.5})).sort((a,b)=>a.k-b.k).map(x=>x.w);
@@ -442,8 +472,8 @@ function ask(){
  const w=Q.list[Q.i];const [q,a]=curMode();Q.cur={w,q,a,t:Date.now(),fifty:false,hint:false};Q.locked=false;
  const opts=a==='img'||Q.cfg.fmt!=='type'?distract(w,a):null;Q.cur.opts=opts;
  const chrono=Q.cfg.fmt==='chrono';
- const promptHtml=q==='img'?`<div class="pic"><img src="${esc(w.img)}" alt="Image à reconnaître"></div>`:`<div class="word"><span class="lang">${q==='en'?UK+'Anglais':FRF+'Français'}</span>${esc(q==='en'?w.en:w.fr)}</div>${q==='en'?`<button class="say" id="sayq" aria-label="Écouter la prononciation">${SPK}</button>`:''}`;
- const askTxt=a==='img'?'Quelle image correspond ?':a==='en'?'Comment dit-on en anglais ?':'Comment dit-on en français ?';
+ const promptHtml=q==='audio'?`<div class="listen"><button class="bigsay" id="sayq" aria-label="Réécouter le mot">${SPK}</button><span class="mut small">Touche pour réécouter</span></div>`:q==='img'?`<div class="pic"><img src="${esc(w.img)}" alt="Image à reconnaître"></div>`:`<div class="word"><span class="lang">${q==='en'?UK+'Anglais':FRF+'Français'}</span>${esc(q==='en'?w.en:w.fr)}</div>${q==='en'?`<button class="say" id="sayq" aria-label="Écouter la prononciation">${SPK}</button>`:''}`;
+ const askTxt=q==='audio'?(a==='img'?'Quelle image correspond au mot entendu ?':a==='en'?(Q.cfg.fmt==='type'?'Écris le mot entendu (en anglais)':'Quel mot as-tu entendu ?'):'Comment dit-on en français ?'):a==='img'?'Quelle image correspond ?':a==='en'?'Comment dit-on en anglais ?':'Comment dit-on en français ?';
  V.innerHTML=`<div class="qtop"><button class="x" id="quit" aria-label="Quitter le quiz"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
  ${chrono?`<div><div class="timer" id="tm"><i style="width:${Q.left/60*100}%"></i></div><div class="mut small" id="tml">${Math.ceil(Q.left)} s</div></div>`:`<div><div class="bar sea"><i style="width:${Q.i/Q.n*100}%"></i></div><div class="mut small">Question ${Q.i+1} sur ${Q.n}</div></div>`}
  <div class="qscore">${Q.score}<span class="combo ${Q.combo>=3?'':'hidden'}">×${mult()}</span></div></div>
@@ -454,7 +484,8 @@ function ask(){
  ${chrono?'':`<div class="jokers">${opts&&!Q.cfg.daily?`<button class="jk" id="j50" ${Q.fifty?'':'disabled'}>50/50 (${Q.fifty})</button>`:`<button class="jk" id="jh" ${Q.hints?'':'disabled'}>Indice (${Q.hints})</button>`}<button class="jk" id="jskip">Je ne sais pas</button></div>`}`;
  $('#quit').onclick=()=>{if(Q.i===0&&!Q.ok){stopQ();go('home');return}modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>end())};
  $('#sayq')?.addEventListener('click',()=>say(w.en));
- if(q==='en'&&S.sound&&!chrono)setTimeout(()=>Q&&Q.cur?.w===w&&say(w.en),250);
+ if(q==='audio')say(w.en);
+ else if(q==='en'&&S.sound&&!chrono)setTimeout(()=>Q&&Q.cur?.w===w&&say(w.en),250);
  V.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(+b.dataset.i));
  const tf=$('#tf');if(tf){tf.onsubmit=e=>{e.preventDefault();answer($('#ans').value)};setTimeout(()=>$('#ans')?.focus(),60)}
  $('#j50')?.addEventListener('click',()=>{if(!Q.fifty||Q.cur.fifty)return;Q.fifty--;Q.cur.fifty=true;let n=0;V.querySelectorAll('.opt').forEach(b=>{if(n<2&&opts[+b.dataset.i].id!==w.id){b.classList.add('gone');b.disabled=true;n++}});$('#j50').disabled=true;$('#j50').textContent='50/50 ('+Q.fifty+')'});
@@ -477,7 +508,7 @@ function answer(x){
  const ok=res>0, sec=(Date.now()-Q.cur.t)/1000;
  V.querySelectorAll('.opt').forEach(b=>{b.disabled=true;const o=Q.cur.opts[+b.dataset.i];if(o.id===w.id)b.classList.add('good');else if(+b.dataset.i===x)b.classList.add('bad')});
  const had=S.wrong[w.id]>0;
- setBox(w.id,mode,ok);S.st[mode]=S.st[mode]||{ok:0,n:0};S.st[mode].n++;
+ setBox(w.id,mode,ok);S.ls[w.id]=Date.now();S.st[mode]=S.st[mode]||{ok:0,n:0};S.st[mode].n++;
  let gain=0;
  if(ok){Q.ok++;Q.combo++;Q.best=Math.max(Q.best,Q.combo);S.st[mode].ok++;
   let base=typed?20:10;if(Q.cur.fifty||Q.cur.hint)base=Math.round(base/2);
@@ -571,7 +602,7 @@ function acc(q){let ok=0,n=0;qModes(q).forEach(m=>{if(S.st[m]){ok+=S.st[m].ok;n+
 function prog(){
  const hard=W.filter(w=>S.wrong[w.id]).sort((a,b)=>S.wrong[b.id]-S.wrong[a.id]).slice(0,8);
  V.innerHTML=`<h1>Mes progrès</h1><p class="mut" style="margin:6px 0 14px">La maîtrise monte à chaque bonne réponse et baisse après une erreur. Elle compare tes trois façons de reconnaître un mot.</p>
- <div class="gauges">${[['en','Depuis l’anglais','#1f3f8f'],['fr','Depuis le français','#e2353d'],['img','Depuis la photo','#1f9d55']].map(([q,l,c])=>`<div class="gauge">${ring(mastery(q),c)}<b>${l}</b><span>${acc(q)}</span></div>`).join('')}</div>
+ <div class="gauges">${[['en','Depuis l’anglais','#1f3f8f'],['fr','Depuis le français','#e2353d'],['img','Depuis la photo','#1f9d55'],['audio','À l’oreille','#0b5c8f']].map(([q,l,c])=>`<div class="gauge">${ring(mastery(q),c)}<b>${l}</b><span>${acc(q)}</span></div>`).join('')}</div>
  <h2>Pavillons</h2><div class="card"><div class="trow" style="--c:#d7262e"><span>Pavillons de signalisation <span class="mut small">${PAV.length} pavillons</span></span><b>${fMastery()}%</b><div class="bar"><i style="width:${fMastery()}%"></i></div></div></div>
  <h2>Par thème</h2><div class="card">${SECS.map(s=>{const l=W.filter(w=>w.s===s.id);const p=Math.round(100*l.reduce((t,w)=>t+allLevel(w),0)/(5*l.length));return`<div class="trow" style="--c:${esc(s.color)}"><span>${esc(s.title)} <span class="mut small">${l.length} mots</span></span><b>${p}%</b><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}</div>
  <h2>Mots difficiles</h2>${hard.length?`<div class="card" style="padding:4px 14px">${hard.map(w=>`<div class="miss">${thumb(w)}<div><b>${esc(w.fr)}</b><div class="seatxt">${esc(w.en)}</div></div><span class="mut small">${S.wrong[w.id]} erreur${S.wrong[w.id]>1?'s':''}</span></div>`).join('')}</div><button class="btn wide" id="rv" style="margin-top:12px">Réviser ces mots</button>`:'<p class="mut">Aucun pour le moment. Les mots ratés apparaîtront ici.</p>'}
@@ -648,6 +679,110 @@ function gate(){view='gate';$('#nav').classList.add('hidden');
  $('#gf').onsubmit=e=>{e.preventDefault();const v=$('#gn').value.trim().slice(0,20);if(!v)return;S.name=v;save();pushScore();go('home')};
  setTimeout(()=>$('#gn')?.focus(),80);
 }
+/* ---------- GENERIC MCQ ENGINE (phrases, signals, VHF, duel) ---------- */
+let MQ=null;
+const xBox=(st,id)=>S.xm[st]?.[id]||0;
+function xSet(st,id,ok){S.xm[st]=S.xm[st]||{};const b=xBox(st,id);S.xm[st][id]=ok?Math.min(5,b+1):Math.max(0,b-2);S.xls[st]=S.xls[st]||{};S.xls[st][id]=Date.now()}
+const xMastery=(st,items)=>items.length?Math.round(100*items.reduce((t,it)=>t+xBox(st,it.id),0)/(5*items.length)):0;
+function startMQ(cfg){touchDay();const n=Math.min(cfg.n||10,cfg.items.length);
+ const order=cfg.items.map(it=>({it,k:xBox(cfg.store,it.id)+Math.random()*2.5})).sort((a,b)=>a.k-b.k).map(x=>x.it);
+ const players=cfg.players||null;
+ MQ={cfg,list:shuffle(order.slice(0,players?n*players.length:n)),i:0,n:players?n*players.length:n,score:0,ok:0,combo:0,best:0,misses:[],locked:false,players,ps:players?players.map(nm=>({nm,score:0,ok:0})):null};
+ document.body.classList.add('inquiz');$('#nav').classList.add('hidden');askMQ()}
+const mmult=()=>MQ.combo>=10?3:MQ.combo>=5?2:MQ.combo>=3?1.5:1;
+function askMQ(){hideFb();const it=MQ.list[MQ.i];const q=MQ.cfg.build(it);MQ.cur={it,q,t:Date.now()};MQ.locked=false;
+ const pl=MQ.players?MQ.ps[MQ.i%MQ.ps.length]:null;
+ V.innerHTML=`<div class="qtop"><button class="x" id="mquit" aria-label="Quitter"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+ <div><div class="bar sea"><i style="width:${MQ.i/MQ.n*100}%"></i></div><div class="mut small">${esc(MQ.cfg.title)} · ${MQ.i+1} sur ${MQ.n}</div></div>
+ <div class="qscore">${pl?MQ.ps.map(p=>esc(p.nm.slice(0,8))+' '+p.score).join(' · '):MQ.score+`<span class="combo ${MQ.combo>=3?'':'hidden'}">×${mmult()}</span>`}</div></div>
+ ${pl?`<div class="hint" style="margin-bottom:10px;text-align:center"><b>À toi, ${esc(pl.nm)} !</b></div>`:''}
+ <div class="prompt pop">${q.prompt}</div><p class="ask">${q.ask}</p>
+ <div class="opts ${q.pics?'pics':''}">${q.opts.map((o,i)=>`<button class="opt ${q.pics?'fpic':o.long?'long':''}" data-i="${i}" ${q.pics?`aria-label="Choix ${i+1}"`:''}><kbd>${i+1}</kbd>${q.pics?o.html:`<span>${o.html}</span>`}</button>`).join('')}</div>`;
+ $('#mquit').onclick=()=>{if(MQ.i===0&&!MQ.ok){const b=MQ.cfg.back;go(b||'play');return}modal('<h3>Quitter ?</h3><p class="mut">'+(MQ.players?'La partie en cours sera perdue.':'Les milles déjà gagnés sont conservés.')+'</p>',()=>endMQ())};
+ V.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answerMQ(+b.dataset.i));
+ if(q.autoSay)say(q.autoSay);
+ V.querySelector('#mqsay')?.addEventListener('click',()=>say(q.autoSay||q.fb.say));
+}
+function answerMQ(i){if(!MQ||MQ.locked)return;MQ.locked=true;const {it,q,t}=MQ.cur;const ok=q.opts[i].key===q.good;
+ V.querySelectorAll('.opt').forEach(b=>{b.disabled=true;const o=q.opts[+b.dataset.i];if(o.key===q.good)b.classList.add('good');else if(+b.dataset.i===i)b.classList.add('bad')});
+ let gain=0;const pl=MQ.players?MQ.ps[MQ.i%MQ.ps.length]:null;
+ if(MQ.cfg.store)xSet(MQ.cfg.store,it.id,ok);
+ if(ok){MQ.ok++;MQ.combo++;MQ.best=Math.max(MQ.best,MQ.combo);gain=Math.round((10+Math.max(0,5-Math.floor((Date.now()-t)/2000)))*(pl?1:mmult()));if(pl){pl.score+=gain;pl.ok++}else{MQ.score+=gain;addPts(gain,MQ.cfg.sec||'w');if(MQ.combo>=10)award('combo10')}sfx(!pl&&(MQ.combo===3||MQ.combo===5||MQ.combo===10)?'combo':'ok')}
+ else{MQ.combo=0;MQ.misses.push(it);sfx('ko')}
+ save();
+ const fb=$('#fb');fb.className='fb '+(ok?'ok':'ko');
+ fb.innerHTML=`<div class="fbin"><div class="fbmedia">${q.fb.media||''}</div><div><h3>${ok?['Bravo !','Exact !','Bien vu !'][Math.floor(Math.random()*3)]+` <span class="small">+${gain} milles</span>`:'Raté…'}</h3>
+ <div style="font-weight:800">${q.fb.title}${q.fb.say?` <button class="say" id="mfsay" aria-label="Écouter" style="width:36px;height:36px">${SPK}</button>`:''}</div>${(q.fb.lines||[]).map(l=>`<div class="small">${l}</div>`).join('')}</div>
+ <button class="btn wide" id="mnx" style="background:${ok?'var(--ok)':'var(--ko)'}">${MQ.i+1>=MQ.n?'Voir le résultat':'Continuer'}</button></div>`;
+ requestAnimationFrame(()=>fb.classList.add('show'));
+ $('#mfsay')?.addEventListener('click',()=>say(q.fb.say));
+ $('#mnx').onclick=()=>{MQ.i++;if(MQ.i>=MQ.n)endMQ();else askMQ()};setTimeout(()=>$('#mnx')?.focus(),50);
+}
+function endMQ(){hideFb();const R=MQ;MQ=null;const asked=Math.max(1,R.i+(R.locked?1:0)),pc=Math.round(100*R.ok/Math.max(1,R.n));
+ document.body.classList.remove('inquiz');$('#nav').classList.remove('hidden');
+ if(R.players){const [a,b]=R.ps;const win=a.score===b.score?null:(a.score>b.score?a:b);sfx('end');if(win)confetti();
+  V.innerHTML=`<div class="res card pop"><div class="mut small">Duel</div><h1 style="font-size:1.8rem;margin:8px 0">${win?esc(win.nm)+' gagne le duel !':'Égalité parfaite !'}</h1>
+  <div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))">${R.ps.map(p=>`<div class="kpi"><b>${p.score}</b><span>${esc(p.nm)} · ${p.ok} bonnes réponses</span></div>`).join('')}</div>
+  <div class="row wrap" style="margin-top:16px"><button class="btn sun" id="mag" style="flex:1">Revanche</button><button class="btn ghost" id="mhm" style="flex:1">Retour</button></div></div>`;
+  $('#mag').onclick=()=>startMQ(R.cfg);$('#mhm').onclick=()=>go(R.cfg.back||'play');scrollTo(0,0);return}
+ S.quizzes++;award('premier');if(R.cfg.onEnd)R.cfg.onEnd(R,pc);save();sfx('end');setTimeout(pushScore,300);
+ const stars=pc>=90?3:pc>=70?2:pc>=40?1:0;if(stars===3)confetti();
+ V.innerHTML=`<div class="res card pop"><div class="mut small">${esc(R.cfg.title)}${S.name?' · '+esc(S.name):''}</div><div class="stars">${[0,1,2].map(i=>STAR(i<stars)).join('')}</div>
+ <h1 style="font-size:1.7rem">${pc===100?'Sans faute !':pc>=80?'Excellent !':pc>=60?'Bien joué':pc>=40?'Ça progresse':'On révise et on recommence'}</h1><div class="big" style="margin:10px 0 2px">+${R.score}</div><div class="mut">milles gagnés</div>
+ <div class="kpis"><div class="kpi"><b>${R.ok}/${R.n}</b><span>bonnes réponses</span></div><div class="kpi"><b>${pc}%</b><span>réussite</span></div><div class="kpi"><b>${R.best}</b><span>meilleure série</span></div></div>
+ <div class="row wrap" style="margin-top:16px"><button class="btn sun" id="mag" style="flex:1">Rejouer</button><button class="btn ghost" id="mhm" style="flex:1">Retour</button></div></div>
+ ${R.misses.length&&R.cfg.missLine?`<h2>À revoir (${R.misses.length})</h2><div class="card" style="padding:4px 14px">${R.misses.map(it=>`<div class="miss">${R.cfg.missLine(it)}</div>`).join('')}</div>`:''}`;
+ $('#mag').onclick=()=>startMQ(R.cfg);$('#mhm').onclick=()=>go(R.cfg.back||'play');header();scrollTo(0,0)}
+document.addEventListener('keydown',e=>{if(!MQ)return;if(!MQ.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(MQ.locked&&e.key==='Enter'&&$('#mnx')){e.preventDefault();$('#mnx').click()}});
+
+/* ---------- PHRASES EN SITUATION ---------- */
+const PHR=[
+ ["We would like a ___ for two nights, please.","berth","Nous voudrions une place de port pour deux nuits, s’il vous plaît.",94],
+ ["Put the ___ out on the starboard side, we’re coming alongside.","fenders","Sortez les pare-battages à tribord, on accoste.",18],
+ ["Pass me the ___ so I can catch the mooring line.","boat hook","Passe-moi la gaffe pour attraper l’amarre.",49],
+ ["Make the line fast on the ___.","cleat","Tourne l’amarre sur le taquet.",47],
+ ["Everyone on deck must wear a ___.","lifejacket","Tout le monde sur le pont doit porter un gilet de sauvetage.",50],
+ ["___! Throw the lifebuoy and keep pointing at him!","Man overboard","Un homme à la mer ! Lance la bouée couronne et continue de le montrer du doigt !",40],
+ ["Switch on the ___, there’s water in the bilge.","bilge pump","Mets la pompe de cale en marche, il y a de l’eau dans les fonds.",58],
+ ["A ___ warning has been issued: force 8 this afternoon.","gale","Un avis de coup de vent a été émis : force 8 cet après-midi.",78],
+ ["Visibility is down to 200 metres in thick ___.","fog","La visibilité est tombée à 200 mètres dans un brouillard épais.",86],
+ ["In fog, sound the ___ every two minutes.","foghorn","Par brouillard, actionne la corne de brume toutes les deux minutes.",56],
+ ["Let go the ___ here: the depth is five metres.","anchor","Mouille l’ancre ici : il y a cinq mètres de fond.",41],
+ ["Our ___ is 1.8 metres: is there enough water at the pontoon?","draught","Notre tirant d’eau est de 1,80 m : y a-t-il assez d’eau au ponton ?",19],
+ ["Steer a ___ of 270 degrees.","course","Suis un cap au 270.",25],
+ ["Fill up with ___ before we leave the marina.","fuel","Fais le plein de carburant avant de quitter le port.",69],
+ ["Clip the ___ to your lifejacket before starting the engine.","kill switch","Accroche le coupe-circuit à ton gilet avant de démarrer le moteur.",70],
+ ["Slow down and put the engine in ___.","neutral","Ralentis et mets le moteur au point mort.",73],
+ ["The ___ is jammed: we can’t steer!","rudder","Le safran est bloqué : on ne peut plus barrer !",7],
+ ["Leave the red ___ to port when entering the harbour.","buoy","Laisse la bouée rouge à bâbord en entrant au port.",45],
+ ["Keep a good lookout with the ___.","binoculars","Fais une bonne veille avec les jumelles.",60],
+ ["Call the coastguard on the ___, channel 16.","VHF radio","Appelle les secours en mer à la VHF, canal 16.",59],
+ ["The tidal ___ is strong in the channel at mid-tide.","stream","Le courant de marée est fort dans le chenal à mi-marée.",85],
+ ["Let’s pump up the ___ and row ashore.","dinghy","Gonflons l’annexe et allons à terre à la rame.",17],
+ ["We hit a rock: we need a new ___.","propeller","On a touché une roche : il nous faut une nouvelle hélice.",63],
+ ["The boat will be lifted out by the ___ for antifouling.","crane","Le bateau sera sorti de l’eau par la grue pour le carénage.",98],
+ ["You can launch the dinghy from the ___.","slipway","Tu peux mettre l’annexe à l’eau depuis la cale.",96],
+ ["A sudden ___ heeled the boat right over.","gust","Une rafale soudaine a fait fortement gîter le bateau.",76],
+ ["May I see your boating ___ and the registration papers?","licence","Puis-je voir votre permis bateau et les papiers d’immatriculation ?",102],
+ ["All the ___ must wear harnesses at night.","crew","Tout l’équipage doit porter un harnais la nuit.",104],
+ ["Check the ___ before leaving: high water is at 14:30.","tide tables","Consulte l’annuaire des marées avant de partir : la pleine mer est à 14 h 30.",84],
+ ["Please report to the ___ to pay for your berth.","harbour master’s office","Merci de passer à la capitainerie pour payer votre place.",91],
+ ["We’re ready to ___: let go the lines!","cast off","Nous sommes prêts à appareiller : larguez les amarres !",32],
+ ["Turn on the ___ at sunset.","navigation lights","Allume les feux de navigation au coucher du soleil.",55]
+].map(([en,ans,fr,wid],i)=>({id:'p'+i,en,ans,fr,wid}));
+const wordById=id=>W.find(w=>w.id===id);
+function phraseQuiz(){startMQ({title:'Phrases en situation',store:'phr',sec:'w',items:PHR,n:10,back:'play',
+ build:it=>{const others=shuffle(PHR.filter(o=>o.ans!==it.ans)).slice(0,3);const opts=shuffle([it,...others]).map(o=>({key:o.ans,html:esc(o.ans)}));const w=wordById(it.wid);const full=it.en.replace('___',it.ans);
+  return{prompt:`<div class="sent">${esc(it.en).replace('___','<u>&nbsp;?&nbsp;</u>')}</div>`,ask:'Quel mot complète la phrase ?',opts,good:it.ans,
+   fb:{media:w?`<img src="${esc(w.img)}" alt="">`:'',title:esc(full),lines:[esc(it.fr)],say:full}}},
+ missLine:it=>{const w=wordById(it.wid);return`${w?`<img src="${esc(w.img)}" alt="">`:'<span></span>'}<div><b>${esc(it.en.replace('___',it.ans))}</b><div class="mut small">${esc(it.fr)}</div></div><button class="say" data-say="${esc(it.en.replace('___',it.ans))}" aria-label="Écouter">${SPK}</button>`}})}
+document.addEventListener('click',e=>{const b=e.target.closest('.miss [data-say]');if(b&&!MQ&&!Q&&!FQ&&view!=='lex')say(b.dataset.say)});
+
+/* ---------- GAMES REGISTRY (Jouer tab) ---------- */
+const GI={phr:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>'};
+const GAMES=[
+ {id:'phr',title:'Phrases en situation',sub:'VHF, port, navigation : trouve le mot qui manque',col:'#5a49b8',icon:GI.phr,pc:()=>xMastery('phr',PHR)+'%',run:phraseQuiz}
+];
 /* ---------- PAVILLONS (Code international des signaux) ---------- */
 const PAV=[
  ['A','Alfa',"J’ai un plongeur en immersion : tenez-vous à distance et passez lentement.","I have a diver down; keep well clear at slow speed."],
@@ -721,7 +856,7 @@ let FQ=null,pavTab='lex';
 function pav(){
  const c=S.fcfg;
  V.innerHTML=`<h1>Pavillons</h1><p class="mut" style="margin:6px 0 12px">Code international des signaux : hissé seul, chaque pavillon a un sens précis, le même dans toutes les langues. ${PAV.length} pavillons, maîtrisés à ${fMastery()}&nbsp;%.</p>
- <div class="seg" id="pt" style="margin-bottom:14px"><button data-v="lex" aria-pressed="${pavTab==='lex'}">Lexique</button><button data-v="quiz" aria-pressed="${pavTab==='quiz'}">Quiz</button></div><div id="pb"></div>`;
+ ${dueFlags().length?`<div class="hint" style="margin-bottom:12px"><b>${dueFlags().length} pavillon${dueFlags().length>1?'s':''} à revoir aujourd’hui.</b> Lance un quiz : ils reviendront en priorité.</div>`:''}<div class="seg" id="pt" style="margin-bottom:14px"><button data-v="lex" aria-pressed="${pavTab==='lex'}">Lexique</button><button data-v="quiz" aria-pressed="${pavTab==='quiz'}">Quiz</button></div><div id="pb"></div>`;
  $('#pt').onclick=e=>{const b=e.target.closest('button');if(b){pavTab=b.dataset.v;pav()}};
  const pb=$('#pb');
  if(pavTab==='lex'){
@@ -739,7 +874,7 @@ function pav(){
  }
 }
 function startF(cfg){touchDay();const n=Math.min(cfg.n||10,PAV.length);
- const pool=PAV.map(p=>({p,k:(cfg.mode==='mix'?fLevel(p):fBox(p.id,cfg.mode))+Math.random()*2.5})).sort((a,b)=>a.k-b.k).map(x=>x.p);
+ const dueSet=new Set(dueFlags().map(p=>p.id));const pool=PAV.map(p=>({p,k:(cfg.mode==='mix'?fLevel(p):fBox(p.id,cfg.mode))+Math.random()*2.5-(dueSet.has(p.id)?3:0)})).sort((a,b)=>a.k-b.k).map(x=>x.p);
  FQ={cfg,list:shuffle(pool.slice(0,n)),i:0,n,score:0,ok:0,combo:0,best:0,misses:[],locked:false};
  document.body.classList.add('inquiz');$('#nav').classList.add('hidden');askF()}
 const fmult=()=>FQ.combo>=10?3:FQ.combo>=5?2:FQ.combo>=3?1.5:1;
@@ -758,7 +893,7 @@ function askF(){hideFb();const p=FQ.list[FQ.i];const mode=FQ.cfg.mode==='mix'?FM
 }
 function answerF(i){if(!FQ||FQ.locked)return;FQ.locked=true;const {p,mode,opts,t}=FQ.cur;const ok=opts[i].id===p.id;
  V.querySelectorAll('.opt').forEach(b=>{b.disabled=true;const o=opts[+b.dataset.i];if(o.id===p.id)b.classList.add('good');else if(+b.dataset.i===i)b.classList.add('bad')});
- fSet(p.id,mode,ok);let gain=0;
+ fSet(p.id,mode,ok);S.fls[p.id]=Date.now();let gain=0;
  if(ok){FQ.ok++;FQ.combo++;FQ.best=Math.max(FQ.best,FQ.combo);gain=Math.round((10+Math.max(0,5-Math.floor((Date.now()-t)/2000)))*fmult());FQ.score+=gain;addPts(gain,'f');if(FQ.combo>=10)award('combo10');sfx(FQ.combo===3||FQ.combo===5||FQ.combo===10?'combo':'ok')}
  else{FQ.combo=0;FQ.misses.push(p);sfx('ko')}
  save();
@@ -786,7 +921,7 @@ function endF(){hideFb();const R=FQ;FQ=null;const asked=R.n,pc=Math.round(100*R.
 document.addEventListener('keydown',e=>{if(!FQ)return;if(!FQ.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(FQ.locked&&e.key==='Enter'&&$('#fnx')){e.preventDefault();$('#fnx').click()}});
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{if(!Q)return;if(e.target.tagName==='INPUT'&&e.key!=='Enter')return;if(!Q.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(Q.locked&&e.key==='Enter'&&$('#nx')){e.preventDefault();$('#nx').click()}});
-document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(!S.name)return;if(FQ){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>go(b.dataset.go));return}if(Q){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>{stopQ();go(b.dataset.go)})}else go(b.dataset.go)});
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(!S.name)return;if(FQ||MQ){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>go(b.dataset.go));return}if(Q){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>{stopQ();go(b.dataset.go)})}else go(b.dataset.go)});
 $('#snd').onclick=()=>{S.sound=!S.sound;save();sndIcon();if(S.sound)sfx('ok')};
 try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}catch(e){}
 
