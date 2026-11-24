@@ -11,3 +11,5 @@ Pour jouer : ouvrir le lien GitHub Pages du dépôt sur iPhone dans Safari, puis
 - `sw.js` : mode hors connexion (changer le numéro de `CACHE` à chaque mise à jour importante).
 
 Photos : Wikipédia et Wikimedia Commons, chacune sous sa licence libre (crédits dans l'onglet Lexique de l'app). Dessins réalisés pour l'app.
+
+Prononciations : fichiers audio dans `audio/`, générés avec Piper (voix Cori, anglais, domaine public ; voix SIWIS, français, CC BY 4.0, Université d’Édimbourg). Chaque fichier porte un hachage de « langue|texte ».

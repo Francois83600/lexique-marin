@@ -395,9 +395,18 @@ function speakNow(clean,lang,useVoice){const ss=speechSynthesis;const u=new Spee
  u.onstart=()=>{started=true;log('voix : début ('+(lang||'défaut')+')')};u.onend=()=>{log('voix : fin');if(UTT===u)UTT=null};u.onerror=e=>{log('voix : erreur '+(e.error||''));if(!hintShown){hintShown=true;toast('La voix a échoué ('+(e.error||'erreur')+'). Essaie le testeur de son dans Progrès.')}};
  if(ss.paused)ss.resume();ss.speak(u);log('voix demandée : « '+clean.slice(0,30)+' »');
  setTimeout(()=>{if(!started&&!hintShown){hintShown=true;toast('Pas de son ? Mode silencieux coupé, volume monté ? Essaie le testeur de son dans Progrès.')}},3000)}
+/* Recorded pronunciations (Piper voices, generated in advance): an audio file plays on iPhone even from the home-screen icon
+   and in silent mode. Each file is named after a hash of "language|text"; the built-in voice stays as a fallback. */
+let AUDIOSET=new Set(),AUD=null;
+fetch('audio/index.json?v=1').then(r=>r.json()).then(a=>{AUDIOSET=new Set(a)}).catch(()=>{});
+const fnv=t=>{let h=2166136261;for(const ch of t){h^=ch.codePointAt(0);h=Math.imul(h,16777619)>>>0}return h.toString(16).padStart(8,'0')};
+function playFile(key,fallback){try{if(!AUD){AUD=new Audio();AUD.setAttribute('playsinline','');AUD.preload='auto'}
+ if(SILENT&&!SILENT.paused)SILENT.pause();AUD.pause();AUD.src='audio/'+key+'.mp3';AUD.onended=()=>keepPlayback();
+ const p=AUD.play();if(p&&p.catch)p.catch(()=>fallback());SPLOG.push(new Date().toLocaleTimeString('fr')+' fichier audio joué');SPLOG=SPLOG.slice(-8);const el=$('#splog');if(el)el.textContent=SPLOG.join('\n');return true}catch(e){return false}}
 function say(txt,lang='en-GB'){if(lang==='en-GB-x')lang='en-GB';else if(S.lang==='en'&&lang==='en-GB'&&FRBY[txt]){txt=FRBY[txt];lang='fr-FR'}
- if(!('speechSynthesis' in window)){toast('La voix n’est pas disponible sur cet appareil.');return}
  audioUnlock();const clean=String(txt).replace(/\s\/\s/g,', ').replace(/\(.*?\)/g,'').trim();if(!clean)return;
+ const key=fnv(lang+'|'+clean);if(AUDIOSET.has(key)&&playFile(key,()=>{if('speechSynthesis' in window)speakNow(clean,lang,false)}))return;
+ if(!('speechSynthesis' in window)){toast('La voix n’est pas disponible sur cet appareil.');return}
  try{const ss=speechSynthesis;if(ss.speaking||ss.pending){ss.cancel();setTimeout(()=>speakNow(clean,lang,false),60)}else speakNow(clean,lang,false)}catch(e){toast('Erreur voix : '+e.message)}}
 function sndIcon(){$('#snd').innerHTML=S.sound?'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="#fff"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="#fff"/><path d="M16 9l5 6M21 9l-5 6"/></svg>';$('#snd').setAttribute('aria-label',S.sound?'Couper le son':'Activer le son')}
 
@@ -632,7 +641,7 @@ function lex(){
  <div class="seg" id="lm" style="margin-bottom:12px"><button data-v="list" aria-pressed="${lexMode==='list'}">Liste</button><button data-v="cards" aria-pressed="${lexMode==='cards'}">Cartes mémoire</button></div>
  <div class="chips hscroll" style="margin-bottom:12px"><button class="chip" data-t="" aria-pressed="${!lexTh}">Tous</button>${SECS.map(s=>`<button class="chip" data-t="${esc(s.id)}" style="--c:${esc(s.color)}" aria-pressed="${lexTh===s.id}">${esc(s.title)}</button>`).join('')}</div>
  <div id="lexbody"></div>
- <details><summary>Crédits des photos</summary><p>Photos : Wikipédia et Wikimedia Commons, chacune sous sa licence libre. Les dessins ont été réalisés pour cette app.</p><ul>${W.filter(w=>w.c).map(w=>`<li>${esc(w.fr)} : <a href="${esc(w.c.url)}">${esc(w.c.file)}</a></li>`).join('')}</ul></details>`;
+ <details><summary>Crédits des photos</summary><p>Photos : Wikipédia et Wikimedia Commons, chacune sous sa licence libre. Les dessins ont été réalisés pour cette app. Voix enregistrées avec Piper : Cori pour l’anglais (domaine public, LibriVox) et SIWIS pour le français (CC BY 4.0, Université d’Édimbourg).</p><ul>${W.filter(w=>w.c).map(w=>`<li>${esc(w.fr)} : <a href="${esc(w.c.url)}">${esc(w.c.file)}</a></li>`).join('')}</ul></details>`;
  $('#lm').onclick=e=>{const b=e.target.closest('button');if(b){lexMode=b.dataset.v;fcI=0;lex()}};
  V.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{lexTh=b.dataset.t;fcI=0;lex()});
  const body=$('#lexbody');
@@ -667,7 +676,7 @@ function prog(){
  <h2>Badges <span class="mut small">${S.badges.length}/${BADGES.length}</span></h2><div class="badges">${BADGES.map(badgeHtml).join('')}</div>
  <h2>Carnet de bord</h2><div class="kpis"><div class="kpi"><b>${S.quizzes}</b><span>quiz joués</span></div><div class="kpi"><b>${S.bestChrono}</b><span>record Chrono</span></div><div class="kpi"><b>${S.streak}</b><span>jours d’affilée</span></div></div>
  <h2>Tester le son</h2><div class="card"><p class="mut small" style="margin:0 0 10px">Si le haut-parleur ne donne rien, touche les boutons un par un et regarde ce qui s’affiche.</p>
- <div class="row wrap"><button class="btn ghost" id="t1" style="flex:1">Bip</button><button class="btn ghost" id="t2" style="flex:1">Voix (par défaut)</button><button class="btn ghost" id="t3" style="flex:1">Voix anglaise</button><button class="btn ghost" id="t4" style="flex:1">Voix française</button></div>
+ <div class="row wrap"><button class="btn ghost" id="t0" style="flex:1">Fichier audio</button><button class="btn ghost" id="t1" style="flex:1">Bip</button><button class="btn ghost" id="t2" style="flex:1">Voix (par défaut)</button><button class="btn ghost" id="t3" style="flex:1">Voix anglaise</button><button class="btn ghost" id="t4" style="flex:1">Voix française</button></div>
  <pre id="spinfo" class="mut small" style="white-space:pre-wrap;margin:10px 0 0;font-family:inherit"></pre><pre id="splog" class="small" style="white-space:pre-wrap;margin:6px 0 0;font-family:inherit"></pre></div>
  <h2>Changer de téléphone</h2><div class="card"><p class="mut small" style="margin:0 0 10px">Crée un code sur ce téléphone, puis tape-le sur le nouveau : tes milles, grades, badges et révisions te suivent. Le code est valable 15 minutes et ne sert qu’une fois.</p><div class="row wrap"><button class="btn" id="mkcode" style="flex:1">Créer un code</button><button class="btn ghost" id="usecode" style="flex:1">J’ai un code</button></div><div id="codeout"></div></div>
  <button class="btn ghost wide" id="rename" style="margin-top:22px">Changer de prénom</button>
@@ -675,6 +684,7 @@ function prog(){
  <p class="mut small" style="text-align:center">Ta progression reste sur cet appareil, dans ce navigateur.<br>Version ${APPV}</p>`;
  $('#rv')?.addEventListener('click',()=>start({...S.cfg,src:'err'}));
  {const info=()=>{let vs=[];try{vs=speechSynthesis.getVoices()}catch(e){}const en=vs.filter(v=>/^en/i.test(v.lang)).length,fr=vs.filter(v=>/^fr/i.test(v.lang)).length;$('#spinfo').textContent=`Synthèse vocale : ${'speechSynthesis' in window?'présente':'absente'} · voix installées : ${vs.length} (anglais ${en}, français ${fr}) · mode app : ${matchMedia('(display-mode: standalone)').matches||navigator.standalone?'oui':'non'}`};info();try{speechSynthesis.onvoiceschanged=info}catch(e){}
+  $('#t0').onclick=()=>say('Man overboard (MOB)','en-GB-x');
   $('#t1').onclick=()=>{const was=S.sound;S.sound=true;sfx('badge');S.sound=was;const l=$('#splog');SPLOG.push('bip joué (son de l’app '+(was?'activé':'coupé')+')');l.textContent=SPLOG.join('\n')};
   $('#t2').onclick=()=>{try{speechSynthesis.cancel()}catch(e){}speakNow('Bonjour, hello','',false)};$('#t3').onclick=()=>speakNow('Good morning, sailor','en-GB',true);$('#t4').onclick=()=>speakNow('Bonjour moussaillon','fr-FR',true);$('#splog').textContent=SPLOG.join('\n')}
  $('#lng').onclick=e=>{const b=e.target.closest('button');if(b&&b.dataset.v!==S.lang){S.lang=b.dataset.v;save();location.reload()}};

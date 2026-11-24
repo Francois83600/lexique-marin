@@ -1,6 +1,6 @@
 /* Mode hors connexion : garde une copie du jeu sur le téléphone.
    Pour publier une nouvelle version, changez le numéro de CACHE. */
-const CACHE = 'lexique-marin-v9';
+const CACHE = 'lexique-marin-v10';
 const CORE = ['./', './index.html', './lexique.json?v=2', './manifest.webmanifest', './i18n-en.js', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
