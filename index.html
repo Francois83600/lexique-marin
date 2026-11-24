@@ -550,9 +550,9 @@ function prog(){
 
 /* ---------- TOP 3 (Firebase Firestore, REST) ---------- */
 // Collez ici la configuration de votre projet Firebase (Paramètres du projet > Vos applications > Web).
-const FB={apiKey:'',projectId:''};
+const FB={apiKey:'AIzaSyB6IxXgQymBcpAG4luFt3JjbyiUyBCG9hk',projectId:'lexique-marin'};
 const FBON=!!(FB.apiKey&&FB.projectId);
-const FBBASE='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FB.projectId)+'/databases/(default)/documents';
+const FBBASE='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FB.projectId)+'/databases/%28default%29/documents';
 function weekKey(d=new Date()){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=t.getUTCFullYear();return y+'-W'+String(Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7)).padStart(2,'0')}
 let TOP=null,topAt=0,topErr=false,topBusy=false,pushing=false,pushAgain=false;
 async function loadTop3(force){if(!FBON||topBusy)return;if(!force&&TOP&&Date.now()-topAt<20000)return;topBusy=true;
