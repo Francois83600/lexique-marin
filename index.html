@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#0b5c8f">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="i18n-en.js"></script>
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>Quiz Lexique marin</title>
@@ -317,7 +318,8 @@ const shuffle=(a,r=Math.random)=>{for(let i=a.length-1;i>0;i--){const j=Math.flo
 function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);h^=h>>>16;return(h>>>0)/4294967296}}
 const today=()=>new Date().toLocaleDateString('sv');
 const KEY='lexmarin.v1';
-const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:'',fm:{},fcfg:{mode:'sig',n:10},wPts:0,fPts:0,secMig:0,dayKey:'',dayScore:0,pushedKey:'',ls:{},fls:{},xm:{},xls:{},voy:1,duel:['','Équipier']};
+const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:'',fm:{},fcfg:{mode:'sig',n:10},wPts:0,fPts:0,secMig:0,dayKey:'',dayScore:0,pushedKey:'',ls:{},fls:{},xm:{},xls:{},voy:1,duel:['','Équipier'],lang:'fr'};
+const FRBY={};
 let S=load(), W=[], SECS=[], SEC={}, Q=null;
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return Object.assign(structuredClone(FRESH),d)}catch(e){}return structuredClone(FRESH)}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -362,7 +364,7 @@ function award(id){if(S.badges.includes(id))return;S.badges.push(id);const b=BAD
 /* ---------- sound & speech ---------- */
 let AC=null;
 function sfx(t){if(!S.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const seq={ok:[[660,.08],[880,.12]],ko:[[220,.18],[170,.22]],combo:[[660,.06],[880,.06],[1100,.12]],badge:[[523,.1],[659,.1],[784,.1],[1046,.2]],end:[[392,.12],[523,.12],[659,.12],[784,.25]]}[t]||[];let at=AC.currentTime;seq.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=t==='ko'?'sawtooth':'triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,at);g.gain.exponentialRampToValueAtTime(.001,at+d);o.connect(g).connect(AC.destination);o.start(at);o.stop(at+d);at+=d*.9})}catch(e){}}
-function say(txt,lang='en-GB'){try{const u=new SpeechSynthesisUtterance(txt.replace(/\s\/\s/g,', ').replace(/\(.*?\)/g,''));u.lang=lang;const vs=speechSynthesis.getVoices();const v=vs.find(v=>v.lang===lang)||vs.find(v=>v.lang.startsWith(lang.slice(0,2)));if(v)u.voice=v;u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function say(txt,lang='en-GB'){if(S.lang==='en'&&lang==='en-GB'&&FRBY[txt]){txt=FRBY[txt];lang='fr-FR'}try{const u=new SpeechSynthesisUtterance(txt.replace(/\s\/\s/g,', ').replace(/\(.*?\)/g,''));u.lang=lang;const vs=speechSynthesis.getVoices();const v=vs.find(v=>v.lang===lang)||vs.find(v=>v.lang.startsWith(lang.slice(0,2)));if(v)u.voice=v;u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 function sndIcon(){$('#snd').innerHTML=S.sound?'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="#fff"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="#fff"/><path d="M16 9l5 6M21 9l-5 6"/></svg>';$('#snd').setAttribute('aria-label',S.sound?'Couper le son':'Activer le son')}
 
 /* ---------- learning model (Leitner boxes 0-5 per word and mode) ---------- */
@@ -584,7 +586,7 @@ function end(){
  if(R.cfg.voy!==undefined){$('#hm').textContent='Retour à la carte';$('#hm').onclick=()=>voyage()}
  $('#rev')?.addEventListener('click',()=>start({...R.cfg,daily:false,src:'err',fmt:R.cfg.fmt==='chrono'?'qcm':R.cfg.fmt,q:R.cfg.q==='mix'?'img':R.cfg.q,a:R.cfg.a==='mix'?'en':R.cfg.a,n:10}));
  V.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>say(b.dataset.say));
- $('#share').onclick=async()=>{const t=`${S.name||'Je'} ${S.name?'a':'viens de'} faire ${R.ok}/${asked} au quiz Lexique marin (${R.score} milles, grade ${RANKS[rankOf(S.pts)][1]}). À toi de jouer : ${location.href.split('#')[0]}`;try{await navigator.clipboard.writeText(t);toast('Message copié, colle-le à un ami')}catch(e){modal(`<h3>Message à envoyer</h3><p>${esc(t)}</p>`,()=>{})}};
+ $('#share').onclick=async()=>{const t=S.lang==='en'?`${S.name||'I'} scored ${R.ok}/${asked} in the Sailing lexicon quiz (${R.score} miles). Your turn: ${location.href.split('#')[0]}`:`${S.name||'Je'} ${S.name?'a':'viens de'} faire ${R.ok}/${asked} au quiz Lexique marin (${R.score} milles, grade ${RANKS[rankOf(S.pts)][1]}). À toi de jouer : ${location.href.split('#')[0]}`;try{await navigator.clipboard.writeText(t);toast('Message copié, colle-le à un ami')}catch(e){modal(`<h3>Message à envoyer</h3><p>${esc(t)}</p>`,()=>{})}};
  document.body.classList.remove('inquiz');$('#nav').classList.remove('hidden');header();scrollTo(0,0);
 }
 
@@ -623,7 +625,7 @@ function ring(p,col){const r=34,c=2*Math.PI*r;return`<svg viewBox="0 0 84 84"><c
 function acc(q){let ok=0,n=0;qModes(q).forEach(m=>{if(S.st[m]){ok+=S.st[m].ok;n+=S.st[m].n}});return n?Math.round(100*ok/n)+' % de réussite · '+n+' rép.':'pas encore joué'}
 function prog(){
  const hard=W.filter(w=>S.wrong[w.id]).sort((a,b)=>S.wrong[b.id]-S.wrong[a.id]).slice(0,8);
- V.innerHTML=`<h1>Mes progrès</h1><p class="mut" style="margin:6px 0 14px">La maîtrise monte à chaque bonne réponse et baisse après une erreur. Elle compare tes trois façons de reconnaître un mot.</p>
+ V.innerHTML=`<div class="seg" id="lng" style="margin-bottom:16px" translate="no"><button data-v="fr" aria-pressed="${S.lang!=='en'}">Français</button><button data-v="en" aria-pressed="${S.lang==='en'}">English</button></div><h1>Mes progrès</h1><p class="mut" style="margin:6px 0 14px">La maîtrise monte à chaque bonne réponse et baisse après une erreur. Elle compare tes trois façons de reconnaître un mot.</p>
  <div class="gauges">${[['en','Depuis l’anglais','#1f3f8f'],['fr','Depuis le français','#e2353d'],['img','Depuis la photo','#1f9d55'],['audio','À l’oreille','#0b5c8f']].map(([q,l,c])=>`<div class="gauge">${ring(mastery(q),c)}<b>${l}</b><span>${acc(q)}</span></div>`).join('')}</div>
  <h2>Signaux</h2><div class="card"><div class="trow" style="--c:#d7262e"><span>Pavillons <span class="mut small">${PAV.length}</span></span><b>${fMastery()}%</b><div class="bar"><i style="width:${fMastery()}%"></i></div></div>${Object.entries(SIGSETS).map(([k,st])=>`<div class="trow" style="--c:${st.col}"><span>${st.title} <span class="mut small">${st.items.length}</span></span><b>${xMastery(k,st.items)}%</b><div class="bar"><i style="width:${xMastery(k,st.items)}%"></i></div></div>`).join('')}</div>
  <h2>Par thème</h2><div class="card">${SECS.map(s=>{const l=W.filter(w=>w.s===s.id);const p=Math.round(100*l.reduce((t,w)=>t+allLevel(w),0)/(5*l.length));return`<div class="trow" style="--c:${esc(s.color)}"><span>${esc(s.title)} <span class="mut small">${l.length} mots</span></span><b>${p}%</b><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}</div>
@@ -635,6 +637,7 @@ function prog(){
  <button class="btn ghost wide" id="reset" style="margin-top:10px">Remettre à zéro ma progression</button>
  <p class="mut small" style="text-align:center">Ta progression reste sur cet appareil, dans ce navigateur.</p>`;
  $('#rv')?.addEventListener('click',()=>start({...S.cfg,src:'err'}));
+ $('#lng').onclick=e=>{const b=e.target.closest('button');if(b&&b.dataset.v!==S.lang){S.lang=b.dataset.v;save();location.reload()}};
  $('#mkcode').onclick=async()=>{const o=$('#codeout'),b=$('#mkcode');b.disabled=true;o.innerHTML='<p class="mut small">Création du code…</p>';const r=await exportCode();b.disabled=false;o.innerHTML=r.ok?`<div class="tcode">${esc(r.code)}</div><p class="mut small" style="text-align:center;margin:0">À taper sur le nouveau téléphone dans les 15 minutes : « J’ai déjà joué sur un autre téléphone ».</p>`:`<p class="small" style="color:var(--ko)">${esc(r.msg)}</p>`};
  $('#usecode').onclick=()=>importUI(true);
  $('#rename').onclick=()=>{modal(`<h3>Nouveau prénom</h3><input id="rn" class="search" style="border-radius:14px;margin-top:10px" maxlength="20" value="${esc(S.name)}">`,()=>{});const m=document.querySelector('.modal');const y=m.querySelector('[data-yes]');y.style.background='var(--sea)';y.onclick=()=>{const v=m.querySelector('#rn').value.trim().slice(0,20);if(v){S.name=v;save();pushScore();toast('Prénom changé')}m.remove();prog()}};
@@ -700,9 +703,10 @@ function gate(){view='gate';$('#nav').classList.add('hidden');
  <div class="flag" style="margin:0 auto 14px;width:84px;height:60px">${flag('P')}</div>
  <h1>Bienvenue à bord !</h1><p class="mut" style="margin:8px 0 18px">Apprends le vocabulaire marin en anglais et en français, gagne des milles et grimpe les grades. Pour commencer, dis-nous ton prénom.</p>
  <form id="gf"><input id="gn" class="search" style="border-radius:14px;text-align:center;font-weight:800" placeholder="Ton prénom" maxlength="20" autocomplete="given-name" required aria-label="Ton prénom"><button class="btn sun wide" style="margin-top:12px;min-height:56px;font-size:1.1rem">Jouer</button></form>
- <p class="mut small" style="margin:14px 0 0">Pas d’inscription. Ton prénom et tes points apparaissent dans le top 3 si tu montes sur le podium.</p><button class="linkbtn" id="gimp">J’ai déjà joué sur un autre téléphone</button></div>`;
+ <p class="mut small" style="margin:14px 0 0">Pas d’inscription. Ton prénom et tes points apparaissent dans le top 3 si tu montes sur le podium.</p><button class="linkbtn" id="gimp">J’ai déjà joué sur un autre téléphone</button><br><button class="linkbtn" id="glang" translate="no">${S.lang==='en'?'Version française':'English version'}</button></div>`;
  $('#gf').onsubmit=e=>{e.preventDefault();const v=$('#gn').value.trim().slice(0,20);if(!v)return;S.name=v;save();pushScore();go('home')};
  $('#gimp').onclick=()=>importUI(false);
+ $('#glang').onclick=()=>{S.lang=S.lang==='en'?'fr':'en';save();location.reload()};
  setTimeout(()=>$('#gn')?.focus(),80);
 }
 /* ---------- GENERIC MCQ ENGINE (phrases, signals, VHF, duel) ---------- */
@@ -1055,7 +1059,7 @@ function sigQuiz(k,mode){const st=SIGSETS[k];
 function duelSetup(){view='duel';
  V.innerHTML=`<h1>Duel</h1><p class="mut" style="margin:6px 0 14px">Deux joueurs sur le même téléphone, chacun son tour : 5 questions chacun. Les points du duel ne comptent pas dans le classement.</p>
  <div class="card"><label class="lbl" for="d1" style="margin-top:0">Joueur 1</label><input id="d1" class="search" style="border-radius:14px" maxlength="16" value="${esc(S.duel[0]||S.name)}">
- <label class="lbl" for="d2">Joueur 2</label><input id="d2" class="search" style="border-radius:14px" maxlength="16" value="${esc(S.duel[1]||'Équipier')}">
+ <label class="lbl" for="d2">Joueur 2</label><input id="d2" class="search" style="border-radius:14px" maxlength="16" value="${esc(S.duel[1]&&S.duel[1]!=='Équipier'&&S.duel[1]!=='Crewmate'?S.duel[1]:(S.lang==='en'?'Crewmate':'Équipier'))}">
  <span class="lbl">Thème</span><div class="seg" id="dt"><button data-v="w" aria-pressed="true">Mots</button><button data-v="f" aria-pressed="false">Pavillons</button><button data-v="s" aria-pressed="false">Signaux</button></div>
  <button class="btn sun wide" id="dgo" style="margin-top:18px;min-height:56px;font-size:1.1rem">Que le meilleur gagne</button></div>`;
  let th='w';$('#dt').onclick=e=>{const b=e.target.closest('button');if(!b)return;th=b.dataset.v;$('#dt').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))};
@@ -1105,9 +1109,25 @@ async function exportCode(){if(!FBON)return{ok:false,msg:'Classement non configu
   try{const r=await fetch(FBBASE+'/transfer/'+code+'?currentDocument.exists=false&key='+encodeURIComponent(FB.apiKey),{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.token},body:JSON.stringify({fields:{s:{stringValue:JSON.stringify(st)},rt:{stringValue:S.rt},uid:{stringValue:a.uid},exp:{timestampValue:exp}}})});
    if(r.ok)return{ok:true,code};}catch(e){return{ok:false,msg:'Réseau indisponible.'}}}
  return{ok:false,msg:'Création du code impossible, réessaie.'}}
+/* imported progress comes from outside this phone: keep only known fields, with the right types */
+function cleanState(o){if(!o||typeof o!=='object'||typeof o.name!=='string'||!o.name.trim())return null;
+ const num=(v,max=1e7)=>{v=Math.floor(Number(v));return Number.isFinite(v)&&v>=0?Math.min(v,max):0};const str=(v,n,re)=>typeof v==='string'&&(!re||re.test(v))?v.slice(0,n):'';
+ const idRe=/^[\w:.-]{1,24}$/,dRe=/^[\dW-]{0,10}$/;const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+ const boxes=(m,okKey)=>{const r={};for(const[k,v]of Object.entries(obj(m))){if(!okKey(k))continue;r[k]={};for(const[kk,vv]of Object.entries(obj(v)))if(idRe.test(kk))r[k][kk]=num(vv,5)}return r};
+ const times=(m,okKey)=>{const r={};for(const[k,v]of Object.entries(obj(m)))if(okKey(k))r[k]=num(v,9e15);return r};
+ const isW=k=>/^\d{1,4}$/.test(k),isF=k=>/^[A-Z]{1,2}$/.test(k),stores=['phr','pen','buoy','light','dist','vhf'];
+ const xm={},xls={};for(const st of stores){xm[st]={};xls[st]={};for(const[k,v]of Object.entries(obj(obj(o.xm)[st])))if(idRe.test(k))xm[st][k]=num(v,5);for(const[k,v]of Object.entries(obj(obj(o.xls)[st])))if(idRe.test(k))xls[st][k]=num(v,9e15)}
+ const stt={};for(const[k,v]of Object.entries(obj(o.st)))if(/^(fr|en|img|audio)>(fr|en|img)$/.test(k))stt[k]={ok:num(obj(v).ok),n:num(obj(v).n)};
+ const ids=new Set(BADGES.map(b=>b[0]));const c=obj(o.cfg),fc=obj(o.fcfg);
+ return{name:o.name.trim().slice(0,20),pts:num(o.pts,1e6),wPts:num(o.wPts,1e6),fPts:num(o.fPts,1e6),weekPts:num(o.weekPts,1e6),week:str(o.week,10,dRe),day:str(o.day,10,dRe),dayPts:num(o.dayPts),daily:str(o.daily,10,dRe),dayKey:str(o.dayKey,10,dRe),dayScore:num(o.dayScore,5000),
+  streak:num(o.streak,9999),last:str(o.last,10,dRe),quizzes:num(o.quizzes),typedOk:num(o.typedOk),bestChrono:num(o.bestChrono,999),voy:Math.max(1,num(o.voy,7)),secMig:1,sound:o.sound!==false,tipOff:!!o.tipOff,lang:o.lang==='en'?'en':'fr',
+  badges:Array.isArray(o.badges)?o.badges.filter(b=>ids.has(b)):[],m:boxes(o.m,isW),ls:times(o.ls,isW),fm:boxes(o.fm,isF),fls:times(o.fls,isF),xm,xls,st:stt,
+  wrong:Object.fromEntries(Object.entries(obj(o.wrong)).filter(([k])=>isW(k)).map(([k,v])=>[k,num(v,999)])),
+  cfg:{q:['en','fr','img','audio'].includes(c.q)?c.q:'img',a:['fr','en','img'].includes(c.a)?c.a:'en',fmt:['qcm','type','chrono'].includes(c.fmt)?c.fmt:'qcm',n:[10,20,30].includes(c.n)?c.n:10,th:Array.isArray(c.th)?c.th.filter(t=>SECS.some(x=>x.id===t)):[]},
+  fcfg:{mode:['sig','en','flag','nom','mix'].includes(fc.mode)?fc.mode:'sig',n:[10,20,27].includes(fc.n)?fc.n:10},duel:Array.isArray(o.duel)?[str(o.duel[0],16),str(o.duel[1],16)||'Équipier']:['','Équipier']}}
 async function importCode(code){code=code.toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6)return'Le code fait 6 caractères.';
  try{const r=await fetch(FBBASE+'/transfer/'+code+'?key='+encodeURIComponent(FB.apiKey));if(!r.ok)return'Code inconnu ou expiré.';const d=await r.json();const f=d.fields||{};
-  const st=JSON.parse(f.s?.stringValue||'{}');if(!st||typeof st!=='object'||!st.name)return'Code invalide.';
+  const st=cleanState(JSON.parse(f.s?.stringValue||'{}'));if(!st)return'Code invalide.';
   S=Object.assign(structuredClone(FRESH),st,{rt:f.rt?.stringValue||'',uid:f.uid?.stringValue||'',pushedKey:''});AUTH=null;save();
   const a=await fbAuth();if(a&&a.uid===f.uid?.stringValue){fetch(FBBASE+'/transfer/'+code+'?key='+encodeURIComponent(FB.apiKey),{method:'DELETE',headers:{'Authorization':'Bearer '+a.token}}).catch(()=>{})}
   return''}catch(e){return'Réseau indisponible.'}}
@@ -1129,7 +1149,7 @@ try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}catch(e){
 
 /* ---------- boot ---------- */
 V.innerHTML='<p class="mut" style="text-align:center;padding:40px 0">Chargement du lexique…</p>';
-fetch('lexique.json').then(r=>r.json()).then(d=>{SECS=d.secs;W=d.words;SECS.forEach(s=>SEC[s.id]=s);if(!S.pid){S.pid='p'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,20):Math.random().toString(36).slice(2)+Date.now().toString(36));save()}if(!S.secMig){S.wPts=Math.max(0,S.pts-S.fPts);S.secMig=1;save()}header();if(S.name){go('home');pushScore()}else gate()}).catch(()=>{V.innerHTML='<div class="card"><h3>Impossible de charger le lexique</h3><p class="mut">Vérifie ta connexion puis recharge la page.</p></div>'});
+fetch('lexique.json').then(r=>r.json()).then(d=>{SECS=d.secs;W=d.words;W.forEach(w=>FRBY[w.en]=w.fr);SECS.forEach(s=>SEC[s.id]=s);if(!S.pid){S.pid='p'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,20):Math.random().toString(36).slice(2)+Date.now().toString(36));save()}if(!S.secMig){S.wPts=Math.max(0,S.pts-S.fPts);S.secMig=1;save()}header();if(S.name){go('home');pushScore()}else gate()}).catch(()=>{V.innerHTML='<div class="card"><h3>Impossible de charger le lexique</h3><p class="mut">Vérifie ta connexion puis recharge la page.</p></div>'});
 }
 </script>
 </body>
