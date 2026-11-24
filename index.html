@@ -200,6 +200,14 @@ details a{color:inherit;overflow-wrap:anywhere}
 @media (prefers-reduced-motion:reduce){.conf{display:none}.pop{animation:none}.fc{transition:none}.fb{transition:none}}
 @media (min-width:600px){.opts:not(.pics){grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:2.4rem}}
 .hidden{display:none!important}
+.subnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 14px;padding:0 16px 2px}
+.subnav button{flex:none;border:2px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-weight:800;font-size:.9rem;min-height:40px}
+.subnav button[aria-pressed=true]{background:var(--sea);border-color:var(--sea);color:#fff}
+.spell{font:700 .95rem/1.5 Nunito,sans-serif}
+.abc{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px}
+.abc div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}
+.abc b{display:block;font:800 1.5rem/1 var(--disp);color:var(--seatxt)}
+.abc span{font-weight:700;font-size:.9rem}
 .due{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:color-mix(in srgb,var(--sea) 12%,var(--card));border:1.5px solid color-mix(in srgb,var(--sea) 40%,transparent);border-radius:16px;padding:12px 14px;margin-top:14px}
 .due svg{width:30px;height:30px;color:var(--seatxt)}
 .due b{display:block;font:800 1.1rem/1.15 var(--disp)}
@@ -285,7 +293,7 @@ body.inquiz main{padding-bottom:calc(240px + env(safe-area-inset-bottom,0px))}
 <nav class="nav" id="nav" aria-label="Navigation"><div>
   <button data-go="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</button>
   <button data-go="play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z" fill="currentColor"/></svg>Quiz</button>
-  <button data-go="pav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M5 21V3"/><path d="M5 4h13l-3 4.5 3 4.5H5"/></svg>Pavillons</button>
+  <button data-go="pav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M5 21V3"/><path d="M5 4h13l-3 4.5 3 4.5H5"/></svg>Signaux</button>
   <button data-go="lex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M9 8h6"/></svg>Lexique</button>
   <button data-go="prog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progrès</button>
 </div></nav>
@@ -406,8 +414,8 @@ function home(){
  <div class="modes">${['en','fr','img'].concat(CANSPEAK?['audio']:[]).map(q=>`<button class="mode" data-q="${q}"><span class="ic" style="background:${q==='en'?'#1f3f8f':q==='fr'?'#e2353d':q==='audio'?'var(--sea)':'#fff'}">${q==='img'?thumb(sample):q==='audio'?'<span style="width:40px;color:#fff">'+SPK+'</span>':q==='en'?'<span style="width:56px">'+UK+'</span>':'<span style="width:56px">'+FRF+'</span>'}</span><span><b>${MODEINFO[q][0]}</b><span class="mut small">${MODEINFO[q][1]}</span></span><span class="pc">${mastery(q)}%</span></button>`).join('')}</div>
  <div class="row wrap" style="margin-top:12px"><button class="btn ghost" id="errs" ${errs?'':'disabled'} style="flex:1">Revoir mes erreurs (${errs})</button><button class="btn ghost" id="cards" style="flex:1">Cartes mémoire</button></div>
  ${S.tipOff?'':`<div class="hint" style="margin-top:18px"><b>Sur iPhone :</b> dans Safari, touche Partager puis « Sur l’écran d’accueil » pour l’ouvrir comme une app. <button class="jk" id="tipx" style="margin-left:6px;min-height:32px">OK</button></div>`}
- <h2>Pavillons</h2>
- <button class="pavcta" id="gopav"><span class="mini">${['A','N','C','Z'].map(flagSvg).join('')}</span><span><b>Pavillons de signalisation</b><span class="mut small">${PAV.length} pavillons du Code international : lexique et quiz à part</span></span><span class="pc">${fMastery()}%</span></button>
+ <h2>Signaux</h2>
+ <button class="pavcta" id="gopav"><span class="mini">${['A','N','C','Z'].map(flagSvg).join('')}</span><span><b>Signaux</b><span class="mut small">Pavillons, flammes, balisage, feux de nuit, détresse et alphabet VHF : lexique et quiz</span></span><span class="pc">${fMastery()}%</span></button>
  <h2>Badges <span class="mut small">${S.badges.length}/${BADGES.length}</span></h2>
  <div class="badges">${BADGES.slice().sort((a,b)=>S.badges.includes(b[0])-S.badges.includes(a[0])).slice(0,6).map(badgeHtml).join('')}</div>`;
  V.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{const q=b.dataset.q;S.cfg.q=q;S.cfg.a=q==='en'?'fr':q==='fr'?'en':q==='audio'?'img':(S.cfg.a==='fr'?'fr':'en');if(S.cfg.fmt==='chrono')S.cfg.fmt='qcm';save();start({...S.cfg})});
@@ -603,7 +611,7 @@ function prog(){
  const hard=W.filter(w=>S.wrong[w.id]).sort((a,b)=>S.wrong[b.id]-S.wrong[a.id]).slice(0,8);
  V.innerHTML=`<h1>Mes progrès</h1><p class="mut" style="margin:6px 0 14px">La maîtrise monte à chaque bonne réponse et baisse après une erreur. Elle compare tes trois façons de reconnaître un mot.</p>
  <div class="gauges">${[['en','Depuis l’anglais','#1f3f8f'],['fr','Depuis le français','#e2353d'],['img','Depuis la photo','#1f9d55'],['audio','À l’oreille','#0b5c8f']].map(([q,l,c])=>`<div class="gauge">${ring(mastery(q),c)}<b>${l}</b><span>${acc(q)}</span></div>`).join('')}</div>
- <h2>Pavillons</h2><div class="card"><div class="trow" style="--c:#d7262e"><span>Pavillons de signalisation <span class="mut small">${PAV.length} pavillons</span></span><b>${fMastery()}%</b><div class="bar"><i style="width:${fMastery()}%"></i></div></div></div>
+ <h2>Signaux</h2><div class="card"><div class="trow" style="--c:#d7262e"><span>Pavillons <span class="mut small">${PAV.length}</span></span><b>${fMastery()}%</b><div class="bar"><i style="width:${fMastery()}%"></i></div></div>${Object.entries(SIGSETS).map(([k,st])=>`<div class="trow" style="--c:${st.col}"><span>${st.title} <span class="mut small">${st.items.length}</span></span><b>${xMastery(k,st.items)}%</b><div class="bar"><i style="width:${xMastery(k,st.items)}%"></i></div></div>`).join('')}</div>
  <h2>Par thème</h2><div class="card">${SECS.map(s=>{const l=W.filter(w=>w.s===s.id);const p=Math.round(100*l.reduce((t,w)=>t+allLevel(w),0)/(5*l.length));return`<div class="trow" style="--c:${esc(s.color)}"><span>${esc(s.title)} <span class="mut small">${l.length} mots</span></span><b>${p}%</b><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}</div>
  <h2>Mots difficiles</h2>${hard.length?`<div class="card" style="padding:4px 14px">${hard.map(w=>`<div class="miss">${thumb(w)}<div><b>${esc(w.fr)}</b><div class="seatxt">${esc(w.en)}</div></div><span class="mut small">${S.wrong[w.id]} erreur${S.wrong[w.id]>1?'s':''}</span></div>`).join('')}</div><button class="btn wide" id="rv" style="margin-top:12px">Réviser ces mots</button>`:'<p class="mut">Aucun pour le moment. Les mots ratés apparaîtront ici.</p>'}
  <h2>Badges <span class="mut small">${S.badges.length}/${BADGES.length}</span></h2><div class="badges">${BADGES.map(badgeHtml).join('')}</div>
@@ -852,12 +860,16 @@ const fBox=(id,m)=>S.fm[id]?.[m]||0;
 function fSet(id,m,ok){S.fm[id]=S.fm[id]||{};const b=fBox(id,m);S.fm[id][m]=ok?Math.min(5,b+1):Math.max(0,b-2)}
 const fLevel=p=>Math.max(...FMODES.map(([m])=>fBox(p.id,m)));
 const fMastery=()=>Math.round(100*PAV.reduce((t,p)=>t+fLevel(p),0)/(5*PAV.length));
-let FQ=null,pavTab='lex';
+let FQ=null,pavTab='lex',sigSub='pav';
+const SUBS=[['pav','Pavillons'],['pen','Flammes'],['buoy','Balisage'],['light','Feux de nuit'],['dist','Détresse'],['vhf','Épeler (VHF)']];
 function pav(){
  const c=S.fcfg;
- V.innerHTML=`<h1>Pavillons</h1><p class="mut" style="margin:6px 0 12px">Code international des signaux : hissé seul, chaque pavillon a un sens précis, le même dans toutes les langues. ${PAV.length} pavillons, maîtrisés à ${fMastery()}&nbsp;%.</p>
+ const sub=`<h1>Signaux</h1><div class="subnav" id="sgn">${SUBS.map(([k,l])=>`<button data-s="${k}" aria-pressed="${sigSub===k}">${l}</button>`).join('')}</div>`;
+ if(sigSub!=='pav'){sigView(sub);return}
+ V.innerHTML=sub+`<h2 style="margin-top:0">Pavillons</h2><p class="mut" style="margin:6px 0 12px">Code international des signaux : hissé seul, chaque pavillon a un sens précis, le même dans toutes les langues. ${PAV.length} pavillons, maîtrisés à ${fMastery()}&nbsp;%.</p>
  ${dueFlags().length?`<div class="hint" style="margin-bottom:12px"><b>${dueFlags().length} pavillon${dueFlags().length>1?'s':''} à revoir aujourd’hui.</b> Lance un quiz : ils reviendront en priorité.</div>`:''}<div class="seg" id="pt" style="margin-bottom:14px"><button data-v="lex" aria-pressed="${pavTab==='lex'}">Lexique</button><button data-v="quiz" aria-pressed="${pavTab==='quiz'}">Quiz</button></div><div id="pb"></div>`;
  $('#pt').onclick=e=>{const b=e.target.closest('button');if(b){pavTab=b.dataset.v;pav()}};
+ bindSub();
  const pb=$('#pb');
  if(pavTab==='lex'){
   pb.innerHTML=`<div class="flaggrid">${PAV.map(p=>{const lv=fLevel(p);return`<div class="fcard"><div class="fsvg">${flagSvg(p.id)}</div><div class="fl"><b>${esc(p.id)} · ${esc(p.name)}</b><button class="say" data-say="${esc(p.name+'. '+p.en)}" aria-label="Écouter en anglais" style="width:36px;height:36px">${SPK}</button></div><div class="ffr">${esc(p.fr)}</div><div class="fen">${esc(p.en)}</div><div class="dots">${[1,2,3,4,5].map(i=>`<i class="${i<=lv?'on':''}"></i>`).join('')}</div></div>`}).join('')}</div>
@@ -919,6 +931,108 @@ function endF(){hideFb();const R=FQ;FQ=null;const asked=R.n,pc=Math.round(100*R.
  $('#fag').onclick=()=>startF(R.cfg);$('#flx').onclick=()=>{pavTab='lex';go('pav')};$('#fhm').onclick=()=>go('home');
  document.body.classList.remove('inquiz');$('#nav').classList.remove('hidden');header();scrollTo(0,0)}
 document.addEventListener('keydown',e=>{if(!FQ)return;if(!FQ.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(FQ.locked&&e.key==='Enter'&&$('#fnx')){e.preventDefault();$('#fnx').click()}});
+/* ---------- AUTRES SIGNAUX : flammes, balisage, feux, détresse, VHF ---------- */
+function bindSub(){$('#sgn').onclick=e=>{const b=e.target.closest('button');if(b){sigSub=b.dataset.s;pavTab='lex';pav()}}}
+const C_={Y:'#ffcc00',B:'#1f4e9c',R:'#d7262e',W:'#ffffff',K:'#151515',G:'#1f9d55'};
+const sv=(body,bg)=>`<svg viewBox="0 0 90 60" aria-hidden="true">${bg?`<rect width="90" height="60" fill="${bg}"/>`:''}${body}</svg>`;
+/* flammes numériques : forme effilée, couleurs officielles du Code international des signaux */
+function penBody(d){const ty=x=>18*x/90,by=x=>60-18*x/90;const vs=(a,b,c)=>`<path d="M${a} ${ty(a)}L${b} ${ty(b)}L${b} ${by(b)}L${a} ${by(a)}Z" fill="${c}"/>`;
+ const top=c=>`<path d="M0 0L90 18L90 30L0 30Z" fill="${c}"/>`,bot=c=>`<path d="M0 30L90 30L90 42L0 60Z" fill="${c}"/>`,all=c=>vs(0,90,c);
+ const cross=c=>`<path d="M30 ${ty(30)}L40 ${ty(40)}L40 ${by(40)}L30 ${by(30)}Z" fill="${c}"/><rect x="0" y="25" width="90" height="10" fill="${c}"/>`;
+ return({0:vs(0,30,C_.Y)+vs(30,60,C_.R)+vs(60,90,C_.Y),1:all(C_.W)+`<circle cx="34" cy="30" r="11" fill="${C_.R}"/>`,2:all(C_.B)+`<circle cx="34" cy="30" r="11" fill="${C_.W}"/>`,3:vs(0,30,C_.R)+vs(30,60,C_.W)+vs(60,90,C_.B),4:all(C_.R)+cross(C_.W),5:vs(0,45,C_.Y)+vs(45,90,C_.B),6:top(C_.K)+bot(C_.W),7:top(C_.Y)+bot(C_.R),8:all(C_.W)+cross(C_.R),9:`<path d="M0 0L45 9L45 30L0 30Z" fill="${C_.W}"/><path d="M45 9L90 18L90 30L45 30Z" fill="${C_.K}"/><path d="M0 30L45 30L45 51L0 60Z" fill="${C_.R}"/><path d="M45 30L90 30L90 42L45 51Z" fill="${C_.Y}"/>`})[d]+`<path d="M0 0L90 18L90 42L0 60Z" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/>`}
+const PEN=['Nadazero','Unaone','Bissotwo','Terrathree','Kartefour','Pantafive','Soxisix','Setteseven','Oktoeight','Novenine'].map((code,d)=>({id:'n'+d,d,svg:sv(penBody(d)),fr:'Flamme '+d,en:'Numeral pennant '+d,dfr:`Chiffre ${d}. À la radio, le chiffre se prononce « ${code} ».`,den:`Figure ${d}, spoken “${code}” on the radio.`}));
+/* balisage AISM, région A (Europe) */
+function buoy(kind){const sea='<path d="M0 50q11-4 22 0t23 0t22 0t23 0V60H0Z" fill="#3a8fc7"/>';const body=(bands)=>{const H=28,top=22;let y=top,o='';bands.forEach(([c,h])=>{const y2=y+H*h;const xl=t=>38-4*((t-top)/H),xr=t=>52+4*((t-top)/H);o+=`<path d="M${xl(y)} ${y}L${xr(y)} ${y}L${xr(y2)} ${y2}L${xl(y2)} ${y2}Z" fill="${c}"/>`;y=y2});return o+'<path d="M38 22L52 22L56 50L34 50Z" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="1"/>'};
+ const mast='<line x1="45" y1="4" x2="45" y2="22" stroke="#333" stroke-width="2"/>';const up=(y,c=C_.K)=>`<path d="M40 ${y+7}L50 ${y+7}L45 ${y}Z" fill="${c}"/>`,dn=(y,c=C_.K)=>`<path d="M40 ${y}L50 ${y}L45 ${y+7}Z" fill="${c}"/>`;
+ const T={N:mast+up(3)+up(12),S:mast+dn(3)+dn(12),E:mast+up(3)+dn(12),W:mast+dn(3)+up(12)};
+ const K=C_.K,Y=C_.Y;let o='';
+ if(kind==='N')o=T.N+body([[K,.5],[Y,.5]]);else if(kind==='S')o=T.S+body([[Y,.5],[K,.5]]);else if(kind==='E')o=T.E+body([[K,1/3],[Y,1/3],[K,1/3]]);else if(kind==='W')o=T.W+body([[Y,1/3],[K,1/3],[Y,1/3]]);
+ else if(kind==='port')o=`<line x1="45" y1="6" x2="45" y2="24" stroke="#333" stroke-width="2"/><rect x="40" y="4" width="10" height="9" fill="${C_.R}"/><rect x="35" y="24" width="20" height="26" fill="${C_.R}" stroke="rgba(0,0,0,.35)"/>`;
+ else if(kind==='stbd')o=`<line x1="45" y1="10" x2="45" y2="24" stroke="#333" stroke-width="2"/><path d="M39 13L51 13L45 3Z" fill="${C_.G}"/><path d="M33 50L57 50L45 20Z" fill="${C_.G}" stroke="rgba(0,0,0,.35)"/>`;
+ else if(kind==='iso')o=`<line x1="45" y1="4" x2="45" y2="22" stroke="#333" stroke-width="2"/><circle cx="45" cy="6" r="4" fill="${K}"/><circle cx="45" cy="15" r="4" fill="${K}"/>`+body([[K,.35],[C_.R,.3],[K,.35]]);
+ else if(kind==='safe')o=`<line x1="45" y1="8" x2="45" y2="22" stroke="#333" stroke-width="2"/><circle cx="45" cy="7" r="5" fill="${C_.R}"/><path d="M38 22L52 22L56 50L34 50Z" fill="${C_.W}"/><path d="M41 22L45 22L46 50L38 50Z" fill="${C_.R}"/><path d="M49 22L52 22L56 50L52 50Z" fill="${C_.R}"/><path d="M38 22L52 22L56 50L34 50Z" fill="none" stroke="rgba(0,0,0,.35)"/>`;
+ else if(kind==='spec')o=`<line x1="45" y1="12" x2="45" y2="22" stroke="#333" stroke-width="2"/><path d="M40 3L50 13M50 3L40 13" stroke="${Y}" stroke-width="3.5"/>`+body([[Y,1]]);
+ return sv(o+sea,'#dff1fb')}
+const BUOY=[['N','Cardinale Nord','North cardinal mark','Les eaux saines sont au nord : passer au nord de la marque. Voyant : deux cônes pointe en haut.','Safe water lies to the north: pass north of it. Topmark: two cones pointing up.'],
+ ['E','Cardinale Est','East cardinal mark','Passer à l’est de la marque. Voyant : deux cônes opposés par la base.','Pass east of the mark. Topmark: two cones base to base.'],
+ ['S','Cardinale Sud','South cardinal mark','Passer au sud de la marque. Voyant : deux cônes pointe en bas.','Pass south of the mark. Topmark: two cones pointing down.'],
+ ['W','Cardinale Ouest','West cardinal mark','Passer à l’ouest de la marque. Voyant : deux cônes opposés par la pointe.','Pass west of the mark. Topmark: two cones point to point.'],
+ ['port','Latérale bâbord','Port-hand lateral mark','Région A : en entrant au port, la laisser à bâbord. Rouge, voyant cylindrique.','IALA A: keep it to port when entering harbour. Red, can topmark.'],
+ ['stbd','Latérale tribord','Starboard-hand lateral mark','Région A : en entrant au port, la laisser à tribord. Verte, voyant conique.','IALA A: keep it to starboard when entering harbour. Green, cone topmark.'],
+ ['iso','Danger isolé','Isolated danger mark','Petit danger avec des eaux navigables tout autour. Deux boules noires.','Small danger with navigable water all around. Two black balls.'],
+ ['safe','Eaux saines','Safe water mark','Milieu de chenal ou atterrissage : pas de danger. Rayures rouges et blanches, boule rouge.','Mid-channel or landfall: no danger. Red and white stripes, red ball.'],
+ ['spec','Marque spéciale','Special mark','Zone particulière : baignade, câble, travaux, zone militaire… Jaune, voyant en X.','Special area: swimming, cable, works, military zone… Yellow, X topmark.']
+].map(([k,fr,en,dfr,den])=>({id:k,svg:buoy(k),fr,en,dfr,den}));
+/* feux de navigation la nuit (COLREG) */
+function lights(arr,extra=''){const L=([x,y,c])=>`<circle cx="${x}" cy="${y}" r="7" fill="${c}" opacity=".25"/><circle cx="${x}" cy="${y}" r="3.6" fill="${c}"/>`;return sv('<rect y="46" width="90" height="14" fill="#0a2236"/><line x1="0" y1="46" x2="90" y2="46" stroke="#1d4566"/>'+extra+arr.map(L).join(''),'#061524')}
+const LW='#fff8d6',LR='#ff3b3b',LG='#36e07a';
+const LIGHT=[['power',[[45,14,LW],[37,36,LG],[53,36,LR]],'Navire à moteur faisant route, vu de face','Power-driven vessel underway, seen head-on','Feu de tête de mât blanc, feux de côté vert (tribord) et rouge (bâbord).','White masthead light, green (starboard) and red (port) sidelights.'],
+ ['sail',[[37,36,LG],[53,36,LR]],'Voilier faisant route, vu de face','Sailing vessel underway, seen head-on','Seulement les feux de côté vert et rouge, pas de feu de tête de mât.','Sidelights only, green and red, no masthead light.'],
+ ['stern',[[45,34,LW]],'Navire vu de l’arrière','Vessel seen from astern','Un feu blanc de poupe.','A white stern light.'],
+ ['anchor',[[45,22,LW]],'Navire au mouillage','Vessel at anchor','Un feu blanc visible tout autour de l’horizon.','One all-round white light.'],
+ ['nuc',[[45,16,LR],[45,32,LR]],'Navire qui n’est pas maître de sa manœuvre','Vessel not under command','Deux feux rouges superposés : il ne peut pas manœuvrer, écartez-vous.','Two all-round red lights in a vertical line: keep clear.'],
+ ['ram',[[45,10,LR],[45,24,LW],[45,38,LR]],'Navire à capacité de manœuvre restreinte','Vessel restricted in her ability to manoeuvre','Rouge, blanc, rouge superposés.','Red, white, red in a vertical line.'],
+ ['trawl',[[45,16,LG],[45,32,LW]],'Chalutier en pêche','Vessel engaged in trawling','Vert sur blanc. Moyen mnémotechnique : « vert sur blanc, chalut dedans ».','Green over white: “green over white, trawling tonight”.'],
+ ['fish',[[45,16,LR],[45,32,LW]],'Navire en pêche (autre que chalutier)','Fishing vessel (not trawling)','Rouge sur blanc : « rouge sur blanc, pêcheur dedans ».','Red over white: “red over white, fishing at night”.'],
+ ['pilot',[[45,16,LW],[45,32,LR]],'Bateau-pilote en service','Pilot vessel on duty','Blanc sur rouge : « blanc sur rouge, pilote à bord ».','White over red: “white over red, pilot ahead”.'],
+ ['aground',[[45,12,LR],[45,26,LR],[30,30,LW]],'Navire échoué','Vessel aground','Deux feux rouges superposés et le feu blanc de mouillage.','Two red lights in a vertical line plus the white anchor light.']
+].map(([id,arr,fr,en,dfr,den])=>({id,svg:lights(arr),fr,en,dfr,den}));
+/* signaux de détresse (COLREG, annexe IV) */
+const DS={
+ rocket:sv('<path d="M33 12Q45 0 57 12" fill="none" stroke="#e8eef3" stroke-width="1.5"/><path d="M33 12L45 22M57 12L45 22" stroke="#e8eef3" stroke-width="1"/><circle cx="45" cy="26" r="10" fill="#ff3b3b" opacity=".3"/><circle cx="45" cy="26" r="5" fill="#ff3b3b"/><path d="M45 34V58" stroke="#ff8a8a" stroke-width="1.5" stroke-dasharray="2 3"/>','#0b2238'),
+ flare:sv('<rect y="46" width="90" height="14" fill="#0a2236"/><circle cx="45" cy="18" r="14" fill="#ff3b3b" opacity=".25"/><circle cx="45" cy="18" r="6" fill="#ff5a3b"/><rect x="42" y="22" width="6" height="22" rx="2" fill="#c43c2c"/><path d="M36 38q4-4 9 0l6 0q3 2 0 5h-15z" fill="#f1c7a0"/>','#0b2238'),
+ smoke:sv('<rect y="40" width="90" height="20" fill="#3a8fc7"/><circle cx="34" cy="30" r="10" fill="#ff8c1a" opacity=".85"/><circle cx="48" cy="22" r="12" fill="#ffa040" opacity=".8"/><circle cx="64" cy="14" r="11" fill="#ffb366" opacity=".7"/><rect x="24" y="36" width="8" height="8" rx="2" fill="#ff7a00" stroke="#a04a00"/>','#dff1fb'),
+ arms:sv('<rect y="44" width="90" height="16" fill="#3a8fc7"/><circle cx="45" cy="22" r="5" fill="#f1c7a0" stroke="#1b3a57"/><path d="M45 27V40" stroke="#e2353d" stroke-width="7" stroke-linecap="round"/><path d="M42 30L30 12M48 30L60 12" stroke="#1b3a57" stroke-width="3" stroke-linecap="round"/><path d="M42 31L28 42M48 31L62 42" stroke="#1b3a57" stroke-width="3" stroke-linecap="round" stroke-dasharray="3 3" opacity=".5"/><path d="M24 20q-4 8 0 16M66 20q4 8 0 16" fill="none" stroke="#e2353d" stroke-width="2"/>','#dff1fb'),
+ nc:flagSvg('NC'),
+ ball:sv('<line x1="30" y1="2" x2="30" y2="58" stroke="#8a97a3" stroke-width="1.5"/><rect x="32" y="6" width="26" height="22" fill="#fff" stroke="#1b3a57" stroke-width="1.5"/><rect x="38" y="11" width="14" height="12" fill="#1f4e9c"/><circle cx="45" cy="42" r="10" fill="#151515"/>','#dff1fb'),
+ sos:sv('<g fill="#ffd84a">'+[10,17,24].map(x=>`<circle cx="${x}" cy="30" r="3"/>`).join('')+[33,45,57].map(x=>`<rect x="${x}" y="27" width="9" height="6" rx="3"/>`).join('')+[71,78,85].map(x=>`<circle cx="${x-2}" cy="30" r="3"/>`).join('')+'</g>','#0b2238'),
+ mayday:sv('<rect x="22" y="18" width="46" height="34" rx="6" fill="#2a323b"/><rect x="28" y="24" width="22" height="12" rx="2" fill="#9be7b0"/><text x="39" y="34" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="10" fill="#0b3d1d">16</text><circle cx="58" cy="30" r="5" fill="#55616d"/><line x1="62" y1="18" x2="66" y2="2" stroke="#2a323b" stroke-width="3"/><path d="M72 12q5 6 0 12M77 8q8 10 0 20" fill="none" stroke="#e2353d" stroke-width="2"/>','#dff1fb'),
+ dsc:sv('<rect x="14" y="14" width="62" height="34" rx="6" fill="#2a323b"/><rect x="20" y="20" width="26" height="10" rx="2" fill="#9be7b0"/><circle cx="60" cy="31" r="10" fill="#e2353d" stroke="#ffb3b3" stroke-width="2"/><rect x="20" y="36" width="26" height="6" rx="2" fill="#55616d"/>','#dff1fb'),
+ epirb:sv('<rect y="44" width="90" height="16" fill="#3a8fc7"/><rect x="38" y="16" width="14" height="32" rx="5" fill="#ffb000" stroke="#a66f00"/><rect x="38" y="30" width="14" height="5" fill="#e2353d"/><line x1="45" y1="16" x2="45" y2="2" stroke="#2a323b" stroke-width="2"/><circle cx="45" cy="18" r="3" fill="#fff"/><path d="M58 8q5 5 0 10M62 4q9 9 0 18M32 8q-5 5 0 10M28 4q-9 9 0 18" fill="none" stroke="#e2353d" stroke-width="1.6"/>','#dff1fb'),
+ horn:sv('<path d="M14 26h10l16-10v28l-16-10H14z" fill="#9aa7b3" stroke="#1b3a57"/><path d="M46 30H86" stroke="#e2353d" stroke-width="3"/><path d="M46 22H80M46 38H80" stroke="#e2353d" stroke-width="2" opacity=".5"/>','#dff1fb'),
+ dye:sv('<rect width="90" height="60" fill="#2f86c1"/><ellipse cx="45" cy="32" rx="34" ry="18" fill="#3dff8a" opacity=".75"/><circle cx="45" cy="30" r="6" fill="#f1c7a0" stroke="#1b3a57"/><path d="M38 38q7 4 14 0" stroke="#ff7a00" stroke-width="5" fill="none"/>')};
+const DIST=[['rocket','Fusée parachute rouge','Red parachute rocket'],['flare','Feu à main rouge','Red hand flare'],['smoke','Fumée orange','Orange smoke signal'],['arms','Bras tendus levés et abaissés lentement','Slowly raising and lowering outstretched arms'],['nc','Pavillons N et C','NC flags'],['ball','Pavillon carré avec une boule','Square flag with a ball above or below it'],['sos','SOS en morse (···–––···)','SOS in Morse code'],['mayday','Appel MAYDAY à la VHF, canal 16','MAYDAY call on VHF channel 16'],['dsc','Bouton de détresse ASN de la VHF','DSC distress button'],['epirb','Balise de détresse (RLS / EPIRB)','EPIRB distress beacon'],['horn','Son continu d’un signal sonore','Continuous sounding of a fog signal'],['dye','Colorant fluorescent dans l’eau','Sea marker dye']]
+ .map(([id,fr,en])=>({id,svg:DS[id],fr,en,dfr:'Signal de détresse reconnu : je suis en danger et j’ai besoin d’aide.',den:'Recognised distress signal: I am in danger and need help.'}));
+/* alphabet VHF */
+const CODE=Object.fromEntries(PAV.filter(p=>p.id.length===1).map(p=>[p.id,p.name]));
+const VHFW=['NEMO','ALIZE','MARIN','SIRENE','ZEPHYR','KIRA','OCEAN','VAGUE','BREIZH','CORSAIR','MISTRAL','QUILLE','PHARE','JUNO','GOLFE','WIND','HOULE','YOLE','FOX','DELTA'].map(w=>({id:w,w}));
+const spellOf=w=>w.split('').map(c=>CODE[c]).join(' ');
+function wrongSpell(w,r){const a=w.split('').map(c=>CODE[c]);const i=Math.floor(r()*a.length);const L=Object.keys(CODE).filter(k=>CODE[k]!==a[i]);a[i]=CODE[L[Math.floor(r()*L.length)]];return a.join(' ')}
+const SIGSETS={
+ pen:{title:'Flammes numériques',col:'#c2551c',items:PEN,intro:'Les flammes numériques du Code international transmettent des chiffres (cap, distance, heure…). À la radio, chaque chiffre a son nom de code.'},
+ buoy:{title:'Balisage (région A)',col:'#1f9d55',items:BUOY,intro:'Balisage AISM, région A (Europe, Afrique, Asie) : rouge à bâbord en entrant au port. Les cardinales indiquent de quel côté passer.'},
+ light:{title:'Feux de nuit',col:'#0b5c8f',items:LIGHT,intro:'La nuit, les feux indiquent le type de navire et ce qu’il fait (COLREG). Vu de face, son feu vert est à ta gauche et son rouge à ta droite.'},
+ dist:{title:'Détresse',col:'#e2353d',items:DIST,intro:'Signaux de détresse reconnus (COLREG, annexe IV). N’importe lequel signifie : je suis en danger et j’ai besoin d’aide immédiate.'},
+ vhf:{title:'Épeler à la VHF',col:'#5a49b8',items:VHFW,intro:'À la radio, on épelle avec l’alphabet phonétique international : NEMO se dit November Echo Mike Oscar.'}};
+function sigView(head){const k=sigSub,st=SIGSETS[k];
+ V.innerHTML=head+`<h2 style="margin-top:0">${st.title}</h2><p class="mut" style="margin:-4px 0 12px">${st.intro} Maîtrisé à ${xMastery(k,st.items)}&nbsp;%.</p>
+ <div class="seg" id="pt" style="margin-bottom:14px"><button data-v="lex" aria-pressed="${pavTab==='lex'}">Lexique</button><button data-v="quiz" aria-pressed="${pavTab==='quiz'}">Quiz</button></div><div id="pb"></div>`;
+ bindSub();$('#pt').onclick=e=>{const b=e.target.closest('button');if(b){pavTab=b.dataset.v;pav()}};
+ const pb=$('#pb');
+ if(pavTab==='lex'){
+  if(k==='vhf'){pb.innerHTML=`<div class="abc">${Object.entries(CODE).map(([l,n])=>`<div><b>${l}</b><span>${esc(n)}</span></div>`).join('')}</div><h3 style="margin:18px 0 8px">Les chiffres</h3><div class="abc">${PEN.map(p=>`<div><b>${p.d}</b><span>${esc(p.den.split('“')[1].replace('” on the radio.',''))}</span></div>`).join('')}</div><p class="mut small" style="margin-top:12px">Touche un nom de bateau dans le quiz pour l’entendre épelé.</p>`;return}
+  pb.innerHTML=`<div class="flaggrid">${st.items.map(it=>{const lv=xBox(k,it.id);return`<div class="fcard"><div class="fsvg">${it.svg}</div><div class="fl"><b style="font-size:1rem">${esc(it.fr)}</b><button class="say" data-say="${esc(it.en)}" aria-label="Écouter en anglais" style="width:36px;height:36px;flex:none">${SPK}</button></div><div class="fen" style="font-weight:700">${esc(it.en)}</div>${k==='dist'?'':`<div class="ffr" style="font-weight:600">${esc(it.dfr)}</div>`}<div class="dots">${[1,2,3,4,5].map(i=>`<i class="${i<=lv?'on':''}"></i>`).join('')}</div></div>`}).join('')}</div>`;
+  pb.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>say(b.dataset.say));return}
+ const modes=k==='vhf'?[['spell','Mot → épellation'],['decode','Épellation → mot']]:[['fr','Image → nom'],['en','Image → nom anglais'],['img','Nom → image']];
+ S.sigm=S.sigm||{};const cur=S.sigm[k]&&(S.sigm[k]==='mix'||modes.some(m=>m[0]===S.sigm[k]))?S.sigm[k]:modes[0][0];
+ pb.innerHTML=`<span class="lbl" style="margin-top:0">Je dois trouver</span><div class="seg" id="sm" style="flex-wrap:wrap">${modes.concat([['mix','Mélange']]).map(([v,l])=>`<button data-v="${v}" aria-pressed="${cur===v}">${l}</button>`).join('')}</div>
+ <button class="btn sun wide" id="sgo" style="margin-top:20px;min-height:58px;font-size:1.15rem">C’est parti</button><p class="mut small" style="text-align:center;margin-top:8px">${Math.min(10,st.items.length)} questions. Les points comptent dans le classement Signaux.</p>`;
+ $('#sm').onclick=e=>{const b=e.target.closest('button');if(b){S.sigm[k]=b.dataset.v;save();pav()}};
+ $('#sgo').onclick=()=>sigQuiz(k,cur);
+}
+function sigQuiz(k,mode){const st=SIGSETS[k];
+ startMQ({title:st.title,store:k,sec:'f',items:st.items,n:10,back:'pav',
+  build:it=>{const ms=k==='vhf'?['spell','decode']:['fr','en','img'];const m=mode==='mix'?ms[Math.floor(Math.random()*ms.length)]:mode;
+   if(k==='vhf'){const right=spellOf(it.w);
+    if(m==='spell'){const set=new Set([right]);let g=0;while(set.size<4&&g++<50)set.add(wrongSpell(it.w,Math.random));const opts=shuffle([...set]).map(x=>({key:x,html:`<span class="spell">${esc(x)}</span>`,long:true}));
+     return{prompt:`<div class="word">${esc(it.w)}</div>`,ask:'Comment l’épeler à la radio ?',opts,good:right,autoSay:'',fb:{media:'',title:esc(it.w),lines:[esc(right)],say:right}}}
+    const others=shuffle(VHFW.filter(o=>o.w!==it.w)).slice(0,3);const opts=shuffle([it,...others]).map(o=>({key:o.w,html:esc(o.w)}));
+    return{prompt:`<div class="sent">${esc(right)}</div><div style="text-align:center;margin:-14px 0 14px"><button class="say" id="mqsay" aria-label="Écouter">${SPK}</button></div>`,ask:'Quel nom de bateau a été épelé ?',opts,good:it.w,autoSay:right,fb:{media:'',title:esc(it.w),lines:[esc(right)],say:right}}}
+   const others=shuffle(st.items.filter(o=>o.id!==it.id)).slice(0,3),all=shuffle([it,...others]);
+   const fb={media:it.svg,title:esc(it.fr)+' · <span class="seatxt">'+esc(it.en)+'</span>',lines:k==='dist'?[]:[esc(it.dfr)],say:it.en};
+   if(m==='img')return{prompt:`<div class="sent">${esc(it.fr)}</div>`,ask:'Quelle image correspond ?',pics:true,opts:all.map(o=>({key:o.id,html:o.svg})),good:it.id,fb};
+   return{prompt:`<div class="bigflag">${it.svg}</div>`,ask:m==='en'?'What is it called? (en anglais)':'Comment ça s’appelle ?',opts:all.map(o=>({key:o.id,html:esc(m==='en'?o.en:o.fr),long:(m==='en'?o.en:o.fr).length>28})),good:it.id,fb}},
+  missLine:it=>k==='vhf'?`<span></span><div><b>${esc(it.w)}</b><div class="mut small">${esc(spellOf(it.w))}</div></div><button class="say" data-say="${esc(spellOf(it.w))}" aria-label="Écouter">${SPK}</button>`:`<div style="width:64px">${it.svg}</div><div><b>${esc(it.fr)}</b><div class="mut small">${esc(it.en)}</div></div><button class="say" data-say="${esc(it.en)}" aria-label="Écouter">${SPK}</button>`})}
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{if(!Q)return;if(e.target.tagName==='INPUT'&&e.key!=='Enter')return;if(!Q.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(Q.locked&&e.key==='Enter'&&$('#nx')){e.preventDefault();$('#nx').click()}});
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(!S.name)return;if(FQ||MQ){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>go(b.dataset.go));return}if(Q){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>{stopQ();go(b.dataset.go)})}else go(b.dataset.go)});
