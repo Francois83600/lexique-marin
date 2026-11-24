@@ -312,6 +312,7 @@ body.inquiz main{padding-bottom:calc(240px + env(safe-area-inset-bottom,0px))}
     <div class="brand"><svg viewBox="0 0 30 22" aria-hidden="true"><rect width="30" height="22" fill="#fff"/><rect x="7" y="5" width="16" height="12" fill="#0b5c8f"/><rect width="30" height="22" fill="none" stroke="#0b5c8f" stroke-width="5"/></svg>Lexique marin</div>
     <span class="pill" title="Milles parcourus (points)"><svg viewBox="0 0 24 24" fill="none" stroke="#ffcf33" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M12 7l2 5-2 5-2-5z"/></svg><span id="hpts">0</span></span>
     <span class="pill" title="Jours d'affilée"><svg viewBox="0 0 24 24" fill="#ffcf33"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z"/></svg><span id="hstreak">0</span></span>
+    <button class="icon-btn" id="lngb" translate="no" style="width:auto;padding:0 10px;font-weight:800;font-size:.85rem" aria-label="Langue / Language"></button>
     <button class="icon-btn" id="snd" aria-label="Son activé" title="Son"></button>
   </div>
 </header>
@@ -379,21 +380,21 @@ function award(id){if(S.badges.includes(id))return;S.badges.push(id);const b=BAD
 /* ---------- sound & speech ---------- */
 let AC=null;
 function sfx(t){if(!S.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const seq={ok:[[660,.08],[880,.12]],ko:[[220,.18],[170,.22]],combo:[[660,.06],[880,.06],[1100,.12]],badge:[[523,.1],[659,.1],[784,.1],[1046,.2]],end:[[392,.12],[523,.12],[659,.12],[784,.25]]}[t]||[];let at=AC.currentTime;seq.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=t==='ko'?'sawtooth':'triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,at);g.gain.exponentialRampToValueAtTime(.001,at+d);o.connect(g).connect(AC.destination);o.start(at);o.stop(at+d);at+=d*.9})}catch(e){}}
-/* Sound on iPhone: unlock audio on the first touch, never cancel and speak in the same instant (iOS drops the speech), keep a reference to the utterance */
-let UTT=null,AUD_OK=false,hintShown=false;
-function unlockAudio(){if(AUD_OK)return;AUD_OK=true;try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
- try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume&&AC.resume()}catch(e){}
- try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}}
-document.addEventListener('pointerdown',unlockAudio,true);document.addEventListener('touchend',unlockAudio,true);
-const pickVoice=lang=>{try{const vs=speechSynthesis.getVoices();return vs.find(v=>v.lang===lang&&/premium|enhanced|natural/i.test(v.name))||vs.find(v=>v.lang===lang)||vs.find(v=>v.lang.replace('_','-').startsWith(lang.slice(0,2)))}catch(e){return null}};
+/* Sound: keep it as simple as iPhone likes it. Speak synchronously inside the tap, set only the language
+   (no voice object: a listed but not downloaded voice can be silent), keep a reference to the utterance. */
+let UTT=null,hintShown=false,SPLOG=[];
+function audioUnlock(){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){}}
+document.addEventListener('touchend',audioUnlock,{capture:true,passive:true});document.addEventListener('click',audioUnlock,true);
+function speakNow(clean,lang,useVoice){const ss=speechSynthesis;const u=new SpeechSynthesisUtterance(clean);if(lang)u.lang=lang;
+ if(useVoice){try{const v=speechSynthesis.getVoices().find(v=>v.lang.replace('_','-')===lang);if(v)u.voice=v}catch(e){}}
+ u.rate=.92;u.volume=1;UTT=u;let started=false;const log=m=>{SPLOG.push(new Date().toLocaleTimeString('fr')+' '+m);SPLOG=SPLOG.slice(-8);const el=$('#splog');if(el)el.textContent=SPLOG.join('\n')};
+ u.onstart=()=>{started=true;log('voix : début ('+(lang||'défaut')+')')};u.onend=()=>{log('voix : fin');if(UTT===u)UTT=null};u.onerror=e=>{log('voix : erreur '+(e.error||''));if(!hintShown){hintShown=true;toast('La voix a échoué ('+(e.error||'erreur')+'). Essaie le testeur de son dans Progrès.')}};
+ if(ss.paused)ss.resume();ss.speak(u);log('voix demandée : « '+clean.slice(0,30)+' »');
+ setTimeout(()=>{if(!started&&!hintShown){hintShown=true;toast('Pas de son ? Mode silencieux coupé, volume monté ? Essaie le testeur de son dans Progrès.')}},3000)}
 function say(txt,lang='en-GB'){if(lang==='en-GB-x')lang='en-GB';else if(S.lang==='en'&&lang==='en-GB'&&FRBY[txt]){txt=FRBY[txt];lang='fr-FR'}
  if(!('speechSynthesis' in window)){toast('La voix n’est pas disponible sur cet appareil.');return}
- unlockAudio();const clean=String(txt).replace(/\s\/\s/g,', ').replace(/\(.*?\)/g,'').trim();if(!clean)return;
- const ss=speechSynthesis;
- const go=()=>{try{const u=new SpeechSynthesisUtterance(clean);u.lang=lang;const v=pickVoice(lang);if(v)u.voice=v;u.rate=.9;u.volume=1;UTT=u;let started=false;u.onstart=()=>{started=true};u.onend=()=>{if(UTT===u)UTT=null};
-  if(ss.paused)ss.resume();ss.speak(u);
-  setTimeout(()=>{if(!started&&!ss.speaking&&!hintShown){hintShown=true;toast('Pas de son ? Désactive le mode silencieux de l’iPhone et monte le volume.')}},2500)}catch(e){}};
- if(ss.speaking||ss.pending){ss.cancel();setTimeout(go,120)}else go()}
+ audioUnlock();const clean=String(txt).replace(/\s\/\s/g,', ').replace(/\(.*?\)/g,'').trim();if(!clean)return;
+ try{const ss=speechSynthesis;if(ss.speaking||ss.pending){ss.cancel();setTimeout(()=>speakNow(clean,lang,false),60)}else speakNow(clean,lang,false)}catch(e){toast('Erreur voix : '+e.message)}}
 function sndIcon(){$('#snd').innerHTML=S.sound?'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="#fff"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="#fff"/><path d="M16 9l5 6M21 9l-5 6"/></svg>';$('#snd').setAttribute('aria-label',S.sound?'Couper le son':'Activer le son')}
 
 /* ---------- learning model (Leitner boxes 0-5 per word and mode) ---------- */
@@ -661,11 +662,17 @@ function prog(){
  <h2>Mots difficiles</h2>${hard.length?`<div class="card" style="padding:4px 14px">${hard.map(w=>`<div class="miss" data-wid="${w.id}">${thumb(w)}<div><b>${esc(w.fr)}</b><div class="seatxt">${esc(w.en)}</div></div><span class="mut small">${S.wrong[w.id]} erreur${S.wrong[w.id]>1?'s':''}</span></div>`).join('')}</div><button class="btn wide" id="rv" style="margin-top:12px">Réviser ces mots</button>`:'<p class="mut">Aucun pour le moment. Les mots ratés apparaîtront ici.</p>'}
  <h2>Badges <span class="mut small">${S.badges.length}/${BADGES.length}</span></h2><div class="badges">${BADGES.map(badgeHtml).join('')}</div>
  <h2>Carnet de bord</h2><div class="kpis"><div class="kpi"><b>${S.quizzes}</b><span>quiz joués</span></div><div class="kpi"><b>${S.bestChrono}</b><span>record Chrono</span></div><div class="kpi"><b>${S.streak}</b><span>jours d’affilée</span></div></div>
+ <h2>Tester le son</h2><div class="card"><p class="mut small" style="margin:0 0 10px">Si le haut-parleur ne donne rien, touche les boutons un par un et regarde ce qui s’affiche.</p>
+ <div class="row wrap"><button class="btn ghost" id="t1" style="flex:1">Bip</button><button class="btn ghost" id="t2" style="flex:1">Voix (par défaut)</button><button class="btn ghost" id="t3" style="flex:1">Voix anglaise</button><button class="btn ghost" id="t4" style="flex:1">Voix française</button></div>
+ <pre id="spinfo" class="mut small" style="white-space:pre-wrap;margin:10px 0 0;font-family:inherit"></pre><pre id="splog" class="small" style="white-space:pre-wrap;margin:6px 0 0;font-family:inherit"></pre></div>
  <h2>Changer de téléphone</h2><div class="card"><p class="mut small" style="margin:0 0 10px">Crée un code sur ce téléphone, puis tape-le sur le nouveau : tes milles, grades, badges et révisions te suivent. Le code est valable 15 minutes et ne sert qu’une fois.</p><div class="row wrap"><button class="btn" id="mkcode" style="flex:1">Créer un code</button><button class="btn ghost" id="usecode" style="flex:1">J’ai un code</button></div><div id="codeout"></div></div>
  <button class="btn ghost wide" id="rename" style="margin-top:22px">Changer de prénom</button>
  <button class="btn ghost wide" id="reset" style="margin-top:10px">Remettre à zéro ma progression</button>
  <p class="mut small" style="text-align:center">Ta progression reste sur cet appareil, dans ce navigateur.</p>`;
  $('#rv')?.addEventListener('click',()=>start({...S.cfg,src:'err'}));
+ {const info=()=>{let vs=[];try{vs=speechSynthesis.getVoices()}catch(e){}const en=vs.filter(v=>/^en/i.test(v.lang)).length,fr=vs.filter(v=>/^fr/i.test(v.lang)).length;$('#spinfo').textContent=`Synthèse vocale : ${'speechSynthesis' in window?'présente':'absente'} · voix installées : ${vs.length} (anglais ${en}, français ${fr}) · mode app : ${matchMedia('(display-mode: standalone)').matches||navigator.standalone?'oui':'non'}`};info();try{speechSynthesis.onvoiceschanged=info}catch(e){}
+  $('#t1').onclick=()=>{const was=S.sound;S.sound=true;sfx('badge');S.sound=was;const l=$('#splog');SPLOG.push('bip joué (son de l’app '+(was?'activé':'coupé')+')');l.textContent=SPLOG.join('\n')};
+  $('#t2').onclick=()=>{try{speechSynthesis.cancel()}catch(e){}speakNow('Bonjour, hello','',false)};$('#t3').onclick=()=>speakNow('Good morning, sailor','en-GB',true);$('#t4').onclick=()=>speakNow('Bonjour moussaillon','fr-FR',true);$('#splog').textContent=SPLOG.join('\n')}
  $('#lng').onclick=e=>{const b=e.target.closest('button');if(b&&b.dataset.v!==S.lang){S.lang=b.dataset.v;save();location.reload()}};
  $('#mkcode').onclick=async()=>{const o=$('#codeout'),b=$('#mkcode');b.disabled=true;o.innerHTML='<p class="mut small">Création du code…</p>';const r=await exportCode();b.disabled=false;o.innerHTML=r.ok?`<div class="tcode">${esc(r.code)}</div><p class="mut small" style="text-align:center;margin:0">À taper sur le nouveau téléphone dans les 15 minutes : « J’ai déjà joué sur un autre téléphone ».</p>`:`<p class="small" style="color:var(--ko)">${esc(r.msg)}</p>`};
  $('#usecode').onclick=()=>importUI(true);
@@ -1189,6 +1196,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-wid]');if(
 document.addEventListener('keydown',e=>{if(!Q)return;if(e.target.tagName==='INPUT'&&e.key!=='Enter')return;if(!Q.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(Q.locked&&e.key==='Enter'&&$('#nx')){e.preventDefault();$('#nx').click()}});
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(!S.name)return;if(FQ||MQ){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>go(b.dataset.go));return}if(Q){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>{stopQ();go(b.dataset.go)})}else go(b.dataset.go)});
 $('#snd').onclick=()=>{S.sound=!S.sound;save();sndIcon();if(S.sound)sfx('ok')};
+$('#lngb').textContent=S.lang==='en'?'FR':'EN';$('#lngb').title=S.lang==='en'?'Version française':'English version';$('#lngb').onclick=()=>{if(Q||FQ||MQ){toast(S.lang==='en'?'Finish the quiz first':'Termine le quiz d’abord');return}S.lang=S.lang==='en'?'fr':'en';save();location.reload()};
 try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}catch(e){}
 
 /* ---------- boot ---------- */

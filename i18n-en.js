@@ -121,6 +121,8 @@
     'Touche un mot pour voir sa fiche, ou le haut-parleur pour l’écouter.': 'Tap a word to see its card, or the speaker to listen.',
     'La voix n’est pas disponible sur cet appareil.': 'Voice is not available on this device.', 'Pas de son ? Désactive le mode silencieux de l’iPhone et monte le volume.': 'No sound? Turn off the iPhone’s silent mode and turn up the volume.',
     'Fermer': 'Close', 'Maîtrise': 'Mastery', 'Dessin réalisé pour cette app.': 'Drawing made for this app.', 'Voir la fiche du mot': 'See the word card',
+    'Tester le son': 'Test the sound', 'Si le haut-parleur ne donne rien, touche les boutons un par un et regarde ce qui s’affiche.': 'If the speaker gives nothing, tap the buttons one by one and look at what appears.',
+    'Bip': 'Beep', 'Voix (par défaut)': 'Voice (default)', 'Voix anglaise': 'English voice', 'Voix française': 'French voice', 'Termine le quiz d’abord': 'Finish the quiz first',
     'Choix 1': 'Choice 1', 'Choix 2': 'Choice 2', 'Choix 3': 'Choice 3', 'Choix 4': 'Choice 4', 'Écouter en anglais': 'Listen in English', 'Écouter la prononciation': 'Listen to the pronunciation'
   };
   function rank(r) { return RANK[r] || r; }
