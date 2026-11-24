@@ -200,6 +200,13 @@ details a{color:inherit;overflow-wrap:anywhere}
 @media (prefers-reduced-motion:reduce){.conf{display:none}.pop{animation:none}.fc{transition:none}.fb{transition:none}}
 @media (min-width:600px){.opts:not(.pics){grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:2.4rem}}
 .hidden{display:none!important}
+.map{background:linear-gradient(#cfe9f7,#9fd2ee);border-radius:20px;border:1px solid var(--line);overflow:hidden}
+.map svg{width:100%;height:auto;display:block}
+.map .port{cursor:pointer}
+.map .port:focus-visible circle{stroke:var(--sun);stroke-width:5}
+@keyframes pulse{0%,100%{r:19}50%{r:23}}
+.map .here{animation:pulse 1.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.map .here{animation:none}}
 .subnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 14px;padding:0 16px 2px}
 .subnav button{flex:none;border:2px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-weight:800;font-size:.9rem;min-height:40px}
 .subnav button[aria-pressed=true]{background:var(--sea);border-color:var(--sea);color:#fff}
@@ -307,7 +314,7 @@ const shuffle=(a,r=Math.random)=>{for(let i=a.length-1;i>0;i--){const j=Math.flo
 function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);h^=h>>>16;return(h>>>0)/4294967296}}
 const today=()=>new Date().toLocaleDateString('sv');
 const KEY='lexmarin.v1';
-const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:'',fm:{},fcfg:{mode:'sig',n:10},wPts:0,fPts:0,secMig:0,dayKey:'',dayScore:0,pushedKey:'',ls:{},fls:{},xm:{},xls:{}};
+const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:'',fm:{},fcfg:{mode:'sig',n:10},wPts:0,fPts:0,secMig:0,dayKey:'',dayScore:0,pushedKey:'',ls:{},fls:{},xm:{},xls:{},voy:1,duel:['','Équipier']};
 let S=load(), W=[], SECS=[], SEC={}, Q=null;
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return Object.assign(structuredClone(FRESH),d)}catch(e){}return structuredClone(FRESH)}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -345,7 +352,8 @@ const BADGES=[
  ['repeche','Repêché','Réussir un mot raté auparavant','O'],
  ['defi','Défi relevé','Réussir le défi du jour','K'],
  ['capitaine','Capitaine','Atteindre 2 500 milles','H'],
- ['signaux','Code des signaux','Sans faute sur 10 pavillons ou plus','Z']];
+ ['signaux','Code des signaux','Sans faute sur 10 pavillons ou plus','Z'],
+ ['voyage','Grand navigateur','Atteindre la dernière escale du voyage','C']];
 function award(id){if(S.badges.includes(id))return;S.badges.push(id);const b=BADGES.find(x=>x[0]===id);toast('Nouveau badge : '+b[1]);sfx('badge');save()}
 
 /* ---------- sound & speech ---------- */
@@ -554,6 +562,8 @@ function end(){
  S.quizzes++;award('premier');setTimeout(pushScore,300);
  if(R.cfg.fmt!=='chrono'&&asked>=10&&R.ok===asked)award('sansfaute');
  if(R.cfg.fmt==='chrono'){if(R.ok>=15)award('rafale');if(R.ok>S.bestChrono){S.bestChrono=R.ok;if(R.ok>0)toast('Nouveau record Chrono : '+R.ok)}}
+ if(R.cfg.voy!==undefined&&pc>=80&&S.voy===R.cfg.voy+1&&S.voy<PORTS.length){S.voy++;setTimeout(()=>{toast('Escale débloquée : '+PORTS[S.voy-1]);confetti();sfx('badge')},400)}
+ if(R.cfg.voy===PORTS.length-1&&pc>=80)award('voyage');
  if(R.cfg.daily){S.daily=today();if(S.dayKey!==today()){S.dayKey=today();S.dayScore=R.score}if(pc>=70)award('defi')}
  save();sfx('end');
  const stars=pc>=90?3:pc>=70?2:pc>=40?1:0;if(stars===3)confetti();
@@ -568,6 +578,7 @@ function end(){
  <button class="btn ghost wide" id="hm" style="margin-top:12px">Retour à l’accueil</button>`;
  $('#again').onclick=()=>start(R.cfg.daily?{...S.cfg}:R.cfg);
  $('#hm').onclick=()=>go('home');
+ if(R.cfg.voy!==undefined){$('#hm').textContent='Retour à la carte';$('#hm').onclick=()=>voyage()}
  $('#rev')?.addEventListener('click',()=>start({...R.cfg,daily:false,src:'err',fmt:R.cfg.fmt==='chrono'?'qcm':R.cfg.fmt,q:R.cfg.q==='mix'?'img':R.cfg.q,a:R.cfg.a==='mix'?'en':R.cfg.a,n:10}));
  V.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>say(b.dataset.say));
  $('#share').onclick=async()=>{const t=`${S.name||'Je'} ${S.name?'a':'viens de'} faire ${R.ok}/${asked} au quiz Lexique marin (${R.score} milles, grade ${RANKS[rankOf(S.pts)][1]}). À toi de jouer : ${location.href.split('#')[0]}`;try{await navigator.clipboard.writeText(t);toast('Message copié, colle-le à un ami')}catch(e){modal(`<h3>Message à envoyer</h3><p>${esc(t)}</p>`,()=>{})}};
@@ -1033,6 +1044,51 @@ function sigQuiz(k,mode){const st=SIGSETS[k];
    if(m==='img')return{prompt:`<div class="sent">${esc(it.fr)}</div>`,ask:'Quelle image correspond ?',pics:true,opts:all.map(o=>({key:o.id,html:o.svg})),good:it.id,fb};
    return{prompt:`<div class="bigflag">${it.svg}</div>`,ask:m==='en'?'What is it called? (en anglais)':'Comment ça s’appelle ?',opts:all.map(o=>({key:o.id,html:esc(m==='en'?o.en:o.fr),long:(m==='en'?o.en:o.fr).length>28})),good:it.id,fb}},
   missLine:it=>k==='vhf'?`<span></span><div><b>${esc(it.w)}</b><div class="mut small">${esc(spellOf(it.w))}</div></div><button class="say" data-say="${esc(spellOf(it.w))}" aria-label="Écouter">${SPK}</button>`:`<div style="width:64px">${it.svg}</div><div><b>${esc(it.fr)}</b><div class="mut small">${esc(it.en)}</div></div><button class="say" data-say="${esc(it.en)}" aria-label="Écouter">${SPK}</button>`})}
+/* ---------- DUEL (2 joueurs, même téléphone) ---------- */
+function duelSetup(){view='duel';
+ V.innerHTML=`<h1>Duel</h1><p class="mut" style="margin:6px 0 14px">Deux joueurs sur le même téléphone, chacun son tour : 5 questions chacun. Les points du duel ne comptent pas dans le classement.</p>
+ <div class="card"><label class="lbl" for="d1" style="margin-top:0">Joueur 1</label><input id="d1" class="search" style="border-radius:14px" maxlength="16" value="${esc(S.duel[0]||S.name)}">
+ <label class="lbl" for="d2">Joueur 2</label><input id="d2" class="search" style="border-radius:14px" maxlength="16" value="${esc(S.duel[1]||'Équipier')}">
+ <span class="lbl">Thème</span><div class="seg" id="dt"><button data-v="w" aria-pressed="true">Mots</button><button data-v="f" aria-pressed="false">Pavillons</button><button data-v="s" aria-pressed="false">Signaux</button></div>
+ <button class="btn sun wide" id="dgo" style="margin-top:18px;min-height:56px;font-size:1.1rem">Que le meilleur gagne</button></div>`;
+ let th='w';$('#dt').onclick=e=>{const b=e.target.closest('button');if(!b)return;th=b.dataset.v;$('#dt').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))};
+ $('#dgo').onclick=()=>{const a=$('#d1').value.trim().slice(0,16)||'Joueur 1',b=$('#d2').value.trim().slice(0,16)||'Joueur 2';S.duel=[a,b];save();startDuel(th,[a,b])};
+}
+function startDuel(th,players){
+ const sigItems=Object.entries(SIGSETS).filter(([k])=>k!=='vhf').flatMap(([k,st])=>st.items.map(it=>({...it,id:k+':'+it.id,set:k})));
+ const items=th==='w'?W:th==='f'?PAV:sigItems;
+ startMQ({title:'Duel',store:null,players,items,n:5,back:'play',
+  build:it=>{if(th==='w'){const m=['img','en','fr'][Math.floor(Math.random()*3)];const lab=o=>m==='en'?o.fr:o.en;const others=shuffle(W.filter(o=>o.id!==it.id&&lab(o)!==lab(it))).slice(0,3);const opts=shuffle([it,...others]).map(o=>({key:o.id,html:esc(lab(o))}));
+    return{prompt:m==='img'?`<div class="pic"><img src="${esc(it.img)}" alt="Image à reconnaître"></div>`:`<div class="word">${esc(m==='en'?it.en:it.fr)}</div>`,ask:m==='en'?'Comment dit-on en français ?':'Comment dit-on en anglais ?',opts,good:it.id,fb:{media:`<img src="${esc(it.img)}" alt="">`,title:esc(it.fr)+' = '+esc(it.en),lines:[],say:it.en}}}
+   if(th==='f'){const others=shuffle(PAV.filter(o=>o.id!==it.id)).slice(0,3);const opts=shuffle([it,...others]).map(o=>({key:o.id,html:esc(o.fr),long:true}));
+    return{prompt:`<div class="bigflag">${flagSvg(it.id)}</div>`,ask:'Que signifie ce pavillon ?',opts,good:it.id,fb:{media:flagSvg(it.id),title:esc(it.id+' · '+it.name),lines:[esc(it.fr)],say:it.name+'. '+it.en}}}
+   const others=shuffle(sigItems.filter(o=>o.set===it.set&&o.id!==it.id)).slice(0,3);const opts=shuffle([it,...others]).map(o=>({key:o.id,html:esc(o.fr),long:o.fr.length>28}));
+   return{prompt:`<div class="bigflag">${it.svg}</div>`,ask:'Comment ça s’appelle ?',opts,good:it.id,fb:{media:it.svg,title:esc(it.fr),lines:[esc(it.en)],say:it.en}}}})}
+
+/* ---------- LE VOYAGE : chaque thème est une escale ---------- */
+const PORTS=['Saint-Malo','Brest','Concarneau','La Rochelle','Arcachon','Biarritz','Bilbao'];
+function voyage(){view='voyage';Q=null;document.body.classList.remove('inquiz');$('#nav').classList.remove('hidden');
+ const W_=340,pts=PORTS.map((_,i)=>({x:i%2?250:90,y:60+i*92}));
+ const route=pts.map((p,i)=>(i?`C${(pts[i-1].x+p.x)/2} ${pts[i-1].y+40} ${(pts[i-1].x+p.x)/2} ${p.y-40} ${p.x} ${p.y}`:`M${p.x} ${p.y}`)).join(' ');
+ const H=pts[pts.length-1].y+70;
+ V.innerHTML=`<h1>Le voyage</h1><p class="mut" style="margin:6px 0 14px">Chaque escale est un thème du lexique. Réussis son quiz à 80&nbsp;% pour lever l’ancre vers l’escale suivante. Escale ${Math.min(S.voy,PORTS.length)} sur ${PORTS.length}.</p>
+ <div class="map"><svg viewBox="0 0 ${W_} ${H}" role="img" aria-label="Carte du voyage">
+  ${Array.from({length:14},(_,i)=>`<path d="M${(i*53)%300+10} ${(i*97)%H} q8 -5 16 0 t16 0" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>`).join('')}
+  <path d="${route}" fill="none" stroke="#0b5c8f" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"/>
+  ${pts.map((p,i)=>{const sec=SECS[i],open=i<S.voy,done=i<S.voy-1,here=i===S.voy-1,m=sec?mastery('img',W.filter(w=>w.s===sec.id)):0;const lx=p.x>170?p.x-30:p.x+30,anchor=p.x>170?'end':'start';
+   return`<g class="port" ${open?`tabindex="0" role="button" data-port="${i}" aria-label="Escale ${i+1}, ${esc(PORTS[i])}"`:''}>
+   ${here?`<circle class="here" cx="${p.x}" cy="${p.y}" r="19" fill="#ffcf33" opacity=".5"/>`:''}
+   <circle cx="${p.x}" cy="${p.y}" r="16" fill="${done?'#1f9d55':open?(sec?.color||'#0b5c8f'):'#9aa7b3'}" stroke="#fff" stroke-width="3"/>
+   <text x="${p.x}" y="${p.y+5}" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="800" font-size="15" fill="#fff">${done?'✓':i+1}</text>
+   <text x="${lx}" y="${p.y-4}" text-anchor="${anchor}" font-family="Baloo 2,sans-serif" font-weight="800" font-size="16" fill="#0b2236" style="paint-order:stroke;stroke:#cfe9f7;stroke-width:4px">${esc(PORTS[i])}</text>
+   <text x="${lx}" y="${p.y+14}" text-anchor="${anchor}" font-family="Nunito,sans-serif" font-weight="700" font-size="12" fill="#29445c" style="paint-order:stroke;stroke:#cfe9f7;stroke-width:4px">${esc(sec?.title||'')}${open?'':' · verrouillée'}</text></g>`}).join('')}
+ </svg></div>
+ <p class="mut small" style="margin-top:10px">Le quiz d’une escale mélange photos, mots français et anglais sur son thème. Tu peux rejouer les escales déjà atteintes.</p>`;
+ V.querySelectorAll('[data-port]').forEach(g=>{const go_=()=>{const i=+g.dataset.port;start({q:'mix',a:'mix',fmt:'qcm',n:10,th:[SECS[i].id],voy:i})};g.onclick=go_;g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go_()}}});
+ scrollTo(0,0)}
+const GI2={duel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l8-8M14.5 4.5l5 5-7 7-5-5zM20 20l-8-8M9.5 4.5l-5 5 7 7"/></svg>',map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>'};
+GAMES.unshift({id:'voy',title:'Le voyage',sub:'7 escales de Saint-Malo à Bilbao, à débloquer',col:'#1f9d55',icon:GI2.map,pc:()=>Math.min(S.voy,PORTS.length)+'/'+PORTS.length,run:voyage});
+GAMES.push({id:'duel',title:'Duel à deux',sub:'Sur le même téléphone, chacun son tour',col:'#e2353d',icon:GI2.duel,pc:()=>'',run:duelSetup});
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{if(!Q)return;if(e.target.tagName==='INPUT'&&e.key!=='Enter')return;if(!Q.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(Q.locked&&e.key==='Enter'&&$('#nx')){e.preventDefault();$('#nx').click()}});
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(!S.name)return;if(FQ||MQ){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>go(b.dataset.go));return}if(Q){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>{stopQ();go(b.dataset.go)})}else go(b.dataset.go)});
