@@ -91,7 +91,7 @@ h2{font-size:1.45rem;margin:26px 0 10px}
 .badge b{display:block;font-size:.86rem;margin-bottom:2px}
 .badge.off{opacity:.42;filter:grayscale(1)}
 .nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));z-index:10}
-.nav div{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.nav div{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
 .nav button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.78rem;font-weight:700;color:var(--mut);min-height:52px;border-radius:12px}
 .nav button svg{width:24px;height:24px}
 .nav button[aria-current=page]{color:var(--sea)}
@@ -199,6 +199,27 @@ details a{color:inherit;overflow-wrap:anywhere}
 @media (prefers-reduced-motion:reduce){.conf{display:none}.pop{animation:none}.fc{transition:none}.fb{transition:none}}
 @media (min-width:600px){.opts:not(.pics){grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:2.4rem}}
 .hidden{display:none!important}
+.flaggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.fcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;display:grid;gap:6px;align-content:start}
+.fsvg svg{width:100%;height:auto;display:block;filter:drop-shadow(0 2px 0 rgba(0,0,0,.18))}
+.fcard .fl{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.fcard .fl b{font:800 1.15rem/1 var(--disp)}
+.fcard .ffr{font-weight:700;font-size:.9rem;line-height:1.3}
+.fcard .fen{font-size:.85rem;line-height:1.3;color:var(--seatxt)}
+.bigflag{width:min(62%,280px);margin:18px auto}
+.bigflag svg{width:100%;height:auto;display:block;filter:drop-shadow(0 3px 0 rgba(0,0,0,.2))}
+.opt.long{font-size:.95rem;font-weight:700;line-height:1.3}
+.opt.fpic{padding:12px;justify-content:center;position:relative}
+.opt.fpic svg{width:100%;max-width:150px;height:auto;display:block}
+.opt.fpic kbd{position:absolute;top:6px;left:6px}
+.fbflag{width:88px}
+.fbflag svg{width:88px;height:auto;display:block}
+.pavcta{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:14px;align-items:center;text-align:left;width:100%;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px 14px}
+.pavcta:hover{border-color:var(--sea)}
+.pavcta .mini{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
+.pavcta .mini svg{width:100%;height:auto;display:block}
+.pavcta b{font:800 1.2rem/1.1 var(--disp);display:block}
+
 .podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end;margin:6px 0 14px}
 .pod{text-align:center;min-width:0}
 .pod .flag{margin:0 auto 6px;width:52px;height:38px}
@@ -238,6 +259,7 @@ body.inquiz main{padding-bottom:calc(240px + env(safe-area-inset-bottom,0px))}
 <nav class="nav" id="nav" aria-label="Navigation"><div>
   <button data-go="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</button>
   <button data-go="play"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z" fill="currentColor"/></svg>Quiz</button>
+  <button data-go="pav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M5 21V3"/><path d="M5 4h13l-3 4.5 3 4.5H5"/></svg>Pavillons</button>
   <button data-go="lex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M9 8h6"/></svg>Lexique</button>
   <button data-go="prog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progrès</button>
 </div></nav>
@@ -250,7 +272,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const today=()=>new Date().toLocaleDateString('sv');
 const KEY='lexmarin.v1';
-const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:''};
+const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:'',fm:{},fcfg:{mode:'sig',n:10}};
 let S=load(), W=[], SECS=[], SEC={}, Q=null;
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return Object.assign(structuredClone(FRESH),d)}catch(e){}return structuredClone(FRESH)}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -287,7 +309,8 @@ const BADGES=[
  ['tour','Tour complet','Rencontrer les 104 mots','N'],
  ['repeche','Repêché','Réussir un mot raté auparavant','O'],
  ['defi','Défi relevé','Réussir le défi du jour','K'],
- ['capitaine','Capitaine','Atteindre 2 500 milles','H']];
+ ['capitaine','Capitaine','Atteindre 2 500 milles','H'],
+ ['signaux','Code des signaux','Sans faute sur 10 pavillons ou plus','Z']];
 function award(id){if(S.badges.includes(id))return;S.badges.push(id);const b=BADGES.find(x=>x[0]===id);toast('Nouveau badge : '+b[1]);sfx('badge');save()}
 
 /* ---------- sound & speech ---------- */
@@ -322,7 +345,7 @@ function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)re
 function modal(html,onYes){const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="card pop" role="dialog" aria-modal="true">${html}<div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn ghost" data-no>Annuler</button><button class="btn" data-yes style="background:var(--ko)">Confirmer</button></div></div>`;document.body.appendChild(m);m.querySelector('[data-no]').onclick=()=>m.remove();m.querySelector('[data-yes]').onclick=()=>{m.remove();onYes()};m.onclick=e=>{if(e.target===m)m.remove()}}
 const thumb=w=>`<img src="${esc(w.img)}" alt="" loading="lazy">`;
 let view='home';
-function go(v){view=v;Q=null;hideFb();document.body.classList.remove('inquiz');$('#nav').classList.remove('hidden');document.querySelectorAll('[data-go]').forEach(b=>b.toggleAttribute('aria-current',b.dataset.go===v)&&b.setAttribute('aria-current','page'));({home,play,lex,prog})[v]();scrollTo(0,0)}
+function go(v){view=v;Q=null;FQ=null;hideFb();document.body.classList.remove('inquiz');$('#nav').classList.remove('hidden');document.querySelectorAll('[data-go]').forEach(b=>b.toggleAttribute('aria-current',b.dataset.go===v)&&b.setAttribute('aria-current','page'));({home,play,lex,prog,pav})[v]();scrollTo(0,0)}
 
 /* ---------- HOME ---------- */
 const MODEINFO={en:['Mot anglais','Je lis le mot anglais, je trouve le français'],fr:['Mot français','Je lis le mot français, je trouve l’anglais'],img:['Photo seule','Je vois l’image, je trouve le mot']};
@@ -348,10 +371,13 @@ function home(){
  <div class="modes">${['en','fr','img'].map(q=>`<button class="mode" data-q="${q}"><span class="ic" style="background:${q==='en'?'#1f3f8f':q==='fr'?'#e2353d':'#fff'}">${q==='img'?thumb(sample):q==='en'?'<span style="width:56px">'+UK+'</span>':'<span style="width:56px">'+FRF+'</span>'}</span><span><b>${MODEINFO[q][0]}</b><span class="mut small">${MODEINFO[q][1]}</span></span><span class="pc">${mastery(q)}%</span></button>`).join('')}</div>
  <div class="row wrap" style="margin-top:12px"><button class="btn ghost" id="errs" ${errs?'':'disabled'} style="flex:1">Revoir mes erreurs (${errs})</button><button class="btn ghost" id="cards" style="flex:1">Cartes mémoire</button></div>
  ${S.tipOff?'':`<div class="hint" style="margin-top:18px"><b>Sur iPhone :</b> dans Safari, touche Partager puis « Sur l’écran d’accueil » pour l’ouvrir comme une app. <button class="jk" id="tipx" style="margin-left:6px;min-height:32px">OK</button></div>`}
+ <h2>Pavillons</h2>
+ <button class="pavcta" id="gopav"><span class="mini">${['A','N','C','Z'].map(flagSvg).join('')}</span><span><b>Pavillons de signalisation</b><span class="mut small">${PAV.length} pavillons du Code international : lexique et quiz à part</span></span><span class="pc">${fMastery()}%</span></button>
  <h2>Badges <span class="mut small">${S.badges.length}/${BADGES.length}</span></h2>
  <div class="badges">${BADGES.slice().sort((a,b)=>S.badges.includes(b[0])-S.badges.includes(a[0])).slice(0,6).map(badgeHtml).join('')}</div>`;
  V.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{const q=b.dataset.q;S.cfg.q=q;S.cfg.a=q==='en'?'fr':q==='fr'?'en':(S.cfg.a==='fr'?'fr':'en');if(S.cfg.fmt==='chrono')S.cfg.fmt='qcm';save();start({...S.cfg})});
  renderTop3();loadTop3();
+ $('#gopav').onclick=()=>go('pav');
  $('#daily').onclick=()=>start({q:'mix',a:'mix',fmt:'qcm',n:10,th:[],daily:true});
  $('#errs').onclick=()=>start({...S.cfg,src:'err'});
  $('#cards').onclick=()=>{go('lex');lexMode='cards';lex()};
@@ -535,6 +561,7 @@ function prog(){
  const hard=W.filter(w=>S.wrong[w.id]).sort((a,b)=>S.wrong[b.id]-S.wrong[a.id]).slice(0,8);
  V.innerHTML=`<h1>Mes progrès</h1><p class="mut" style="margin:6px 0 14px">La maîtrise monte à chaque bonne réponse et baisse après une erreur. Elle compare tes trois façons de reconnaître un mot.</p>
  <div class="gauges">${[['en','Depuis l’anglais','#1f3f8f'],['fr','Depuis le français','#e2353d'],['img','Depuis la photo','#1f9d55']].map(([q,l,c])=>`<div class="gauge">${ring(mastery(q),c)}<b>${l}</b><span>${acc(q)}</span></div>`).join('')}</div>
+ <h2>Pavillons</h2><div class="card"><div class="trow" style="--c:#d7262e"><span>Pavillons de signalisation <span class="mut small">${PAV.length} pavillons</span></span><b>${fMastery()}%</b><div class="bar"><i style="width:${fMastery()}%"></i></div></div></div>
  <h2>Par thème</h2><div class="card">${SECS.map(s=>{const l=W.filter(w=>w.s===s.id);const p=Math.round(100*l.reduce((t,w)=>t+allLevel(w),0)/(5*l.length));return`<div class="trow" style="--c:${esc(s.color)}"><span>${esc(s.title)} <span class="mut small">${l.length} mots</span></span><b>${p}%</b><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}</div>
  <h2>Mots difficiles</h2>${hard.length?`<div class="card" style="padding:4px 14px">${hard.map(w=>`<div class="miss">${thumb(w)}<div><b>${esc(w.fr)}</b><div class="seatxt">${esc(w.en)}</div></div><span class="mut small">${S.wrong[w.id]} erreur${S.wrong[w.id]>1?'s':''}</span></div>`).join('')}</div><button class="btn wide" id="rv" style="margin-top:12px">Réviser ces mots</button>`:'<p class="mut">Aucun pour le moment. Les mots ratés apparaîtront ici.</p>'}
  <h2>Badges <span class="mut small">${S.badges.length}/${BADGES.length}</span></h2><div class="badges">${BADGES.map(badgeHtml).join('')}</div>
@@ -595,9 +622,145 @@ function gate(){view='gate';$('#nav').classList.add('hidden');
  $('#gf').onsubmit=e=>{e.preventDefault();const v=$('#gn').value.trim().slice(0,20);if(!v)return;S.name=v;save();pushScore();go('home')};
  setTimeout(()=>$('#gn')?.focus(),80);
 }
+/* ---------- PAVILLONS (Code international des signaux) ---------- */
+const PAV=[
+ ['A','Alfa',"J’ai un plongeur en immersion : tenez-vous à distance et passez lentement.","I have a diver down; keep well clear at slow speed."],
+ ['B','Bravo',"Je charge, décharge ou transporte des marchandises dangereuses.","I am taking in, discharging or carrying dangerous goods."],
+ ['C','Charlie',"Oui (affirmatif).","Yes (affirmative)."],
+ ['D','Delta',"Écartez-vous de moi : je manœuvre avec difficulté.","Keep clear of me; I am manoeuvring with difficulty."],
+ ['E','Echo',"Je viens sur tribord.","I am altering my course to starboard."],
+ ['F','Foxtrot',"Je suis désemparé : communiquez avec moi.","I am disabled; communicate with me."],
+ ['G','Golf',"J’ai besoin d’un pilote.","I require a pilot."],
+ ['H','Hotel',"J’ai un pilote à bord.","I have a pilot on board."],
+ ['I','India',"Je viens sur bâbord.","I am altering my course to port."],
+ ['J','Juliett',"J’ai un incendie et des marchandises dangereuses à bord : tenez-vous à distance.","I am on fire and have dangerous cargo on board; keep well clear of me."],
+ ['K','Kilo',"Je désire communiquer avec vous.","I wish to communicate with you."],
+ ['L','Lima',"Stoppez immédiatement votre navire.","You should stop your vessel instantly."],
+ ['M','Mike',"Mon navire est stoppé et n’a plus d’erre.","My vessel is stopped and making no way through the water."],
+ ['N','November',"Non (négatif).","No (negative)."],
+ ['O','Oscar',"Un homme à la mer !","Man overboard!"],
+ ['P','Papa',"Au port : tout le monde à bord, le navire va appareiller.","In harbour: all persons should report on board as the vessel is about to proceed to sea."],
+ ['Q','Quebec',"Mon navire est indemne, je demande la libre pratique.","My vessel is healthy and I request free pratique."],
+ ['R','Romeo',"Pas de sens hissé seul (« reçu » en signaux lumineux).","No single-flag meaning (means “received” in light signalling)."],
+ ['S','Sierra',"Je bats en arrière (machines en marche arrière).","I am operating astern propulsion."],
+ ['T','Tango',"Écartez-vous de moi : je fais du chalutage en bœuf.","Keep clear of me; I am engaged in pair trawling."],
+ ['U','Uniform',"Vous courez vers un danger.","You are running into danger."],
+ ['V','Victor',"Je demande assistance.","I require assistance."],
+ ['W','Whiskey',"J’ai besoin d’assistance médicale.","I require medical assistance."],
+ ['X','X-ray',"Suspendez l’exécution de vos intentions et soyez attentif à mes signaux.","Stop carrying out your intentions and watch for my signals."],
+ ['Y','Yankee',"Je chasse sur mon ancre.","I am dragging my anchor."],
+ ['Z','Zulu',"J’ai besoin d’un remorqueur.","I require a tug."],
+ ['NC','November Charlie',"Je suis en détresse et demande une assistance immédiate.","I am in distress and require immediate assistance."]
+].map(([id,name,fr,en])=>({id,name,fr,en}));
+const FY='#ffcc00',FB_='#1f4e9c',FR_='#d7262e',FW='#ffffff',FK='#151515';
+function flagBody(id){const r=(x,y,w,h,c)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+ switch(id){
+ case 'A':return r(0,0,45,60,FW)+`<path d="M45 0H90L68 30L90 60H45Z" fill="${FB_}"/>`;
+ case 'B':return `<path d="M0 0H90L68 30L90 60H0Z" fill="${FR_}"/>`;
+ case 'C':return [FB_,FW,FR_,FW,FB_].map((c,i)=>r(0,i*12,90,12,c)).join('');
+ case 'D':return r(0,0,90,60,FY)+r(0,15,90,30,FB_);
+ case 'E':return r(0,0,90,30,FB_)+r(0,30,90,30,FR_);
+ case 'F':return r(0,0,90,60,FW)+`<path d="M45 0L90 30L45 60L0 30Z" fill="${FR_}"/>`;
+ case 'G':return [0,1,2,3,4,5].map(i=>r(i*15,0,15,60,i%2?FB_:FY)).join('');
+ case 'H':return r(0,0,45,60,FW)+r(45,0,45,60,FR_);
+ case 'I':return r(0,0,90,60,FY)+`<circle cx="45" cy="30" r="15" fill="${FK}"/>`;
+ case 'J':return r(0,0,90,60,FB_)+r(0,20,90,20,FW);
+ case 'K':return r(0,0,45,60,FY)+r(45,0,45,60,FB_);
+ case 'L':return r(0,0,45,30,FY)+r(45,0,45,30,FK)+r(0,30,45,30,FK)+r(45,30,45,30,FY);
+ case 'M':return r(0,0,90,60,FB_)+`<path d="M0 0L90 60M90 0L0 60" stroke="${FW}" stroke-width="12"/>`;
+ case 'N':return Array.from({length:16},(_,i)=>r((i%4)*22.5,Math.floor(i/4)*15,22.5,15,(i%4+Math.floor(i/4))%2?FW:FB_)).join('');
+ case 'O':return r(0,0,90,60,FY)+`<path d="M0 0H90V60Z" fill="${FR_}"/>`;
+ case 'P':return r(0,0,90,60,FB_)+r(30,20,30,20,FW);
+ case 'Q':return r(0,0,90,60,FY);
+ case 'R':return r(0,0,90,60,FR_)+r(37.5,0,15,60,FY)+r(0,22.5,90,15,FY);
+ case 'S':return r(0,0,90,60,FW)+r(30,20,30,20,FB_);
+ case 'T':return r(0,0,30,60,FR_)+r(30,0,30,60,FW)+r(60,0,30,60,FB_);
+ case 'U':return r(0,0,90,60,FW)+r(0,0,45,30,FR_)+r(45,30,45,30,FR_);
+ case 'V':return r(0,0,90,60,FW)+`<path d="M0 0L90 60M90 0L0 60" stroke="${FR_}" stroke-width="12"/>`;
+ case 'W':return r(0,0,90,60,FB_)+r(12,8,66,44,FW)+r(27,18,36,24,FR_);
+ case 'X':return r(0,0,90,60,FW)+r(37.5,0,15,60,FB_)+r(0,22.5,90,15,FB_);
+ case 'Y':{let o=r(0,0,90,60,FY);for(let k=-5;k<7;k++){const x=k*15;o+=`<path d="M${x} 60H${x+7.5}L${x+67.5} 0H${x+60}Z" fill="${FR_}"/>`}return o}
+ case 'Z':return `<path d="M0 0H90L45 30Z" fill="${FK}"/><path d="M90 0V60L45 30Z" fill="${FR_}"/><path d="M0 60H90L45 30Z" fill="${FB_}"/><path d="M0 0V60L45 30Z" fill="${FY}"/>`;
+ }return ''}
+function flagSvg(id){
+ if(id==='NC')return `<svg viewBox="0 0 90 60" aria-hidden="true"><line x1="22" y1="0" x2="22" y2="60" stroke="#8a97a3" stroke-width="1.5"/><g transform="translate(25 2) scale(.45)">${flagBody('N')}<rect width="90" height="60" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="3"/></g><g transform="translate(25 31) scale(.45)">${flagBody('C')}<rect width="90" height="60" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="3"/></g></svg>`;
+ const edge=id==='A'||id==='B'?'<path d="M0 0H90L68 30L90 60H0Z" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.5"/>':'<rect x=".75" y=".75" width="88.5" height="58.5" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.5"/>';
+ return `<svg viewBox="0 0 90 60" aria-hidden="true">${flagBody(id)}${edge}</svg>`}
+const FMODES=[['sig','Pavillon → sens'],['en','Pavillon → sens EN'],['flag','Sens → pavillon'],['nom','Pavillon → nom']];
+const fBox=(id,m)=>S.fm[id]?.[m]||0;
+function fSet(id,m,ok){S.fm[id]=S.fm[id]||{};const b=fBox(id,m);S.fm[id][m]=ok?Math.min(5,b+1):Math.max(0,b-2)}
+const fLevel=p=>Math.max(...FMODES.map(([m])=>fBox(p.id,m)));
+const fMastery=()=>Math.round(100*PAV.reduce((t,p)=>t+fLevel(p),0)/(5*PAV.length));
+let FQ=null,pavTab='lex';
+function pav(){
+ const c=S.fcfg;
+ V.innerHTML=`<h1>Pavillons</h1><p class="mut" style="margin:6px 0 12px">Code international des signaux : hissé seul, chaque pavillon a un sens précis, le même dans toutes les langues. ${PAV.length} pavillons, maîtrisés à ${fMastery()}&nbsp;%.</p>
+ <div class="seg" id="pt" style="margin-bottom:14px"><button data-v="lex" aria-pressed="${pavTab==='lex'}">Lexique</button><button data-v="quiz" aria-pressed="${pavTab==='quiz'}">Quiz</button></div><div id="pb"></div>`;
+ $('#pt').onclick=e=>{const b=e.target.closest('button');if(b){pavTab=b.dataset.v;pav()}};
+ const pb=$('#pb');
+ if(pavTab==='lex'){
+  pb.innerHTML=`<div class="flaggrid">${PAV.map(p=>{const lv=fLevel(p);return`<div class="fcard"><div class="fsvg">${flagSvg(p.id)}</div><div class="fl"><b>${esc(p.id)} · ${esc(p.name)}</b><button class="say" data-say="${esc(p.name+'. '+p.en)}" aria-label="Écouter en anglais" style="width:36px;height:36px">${SPK}</button></div><div class="ffr">${esc(p.fr)}</div><div class="fen">${esc(p.en)}</div><div class="dots">${[1,2,3,4,5].map(i=>`<i class="${i<=lv?'on':''}"></i>`).join('')}</div></div>`}).join('')}</div>
+  <p class="mut small" style="margin-top:14px">Les noms (Alfa, Bravo…) sont ceux de l’alphabet phonétique international, utilisé aussi à la VHF. Source : Code international des signaux (OMI).</p>`;
+  pb.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>say(b.dataset.say));
+ }else{
+  const seg=(k,opts,cur)=>`<div class="seg" data-k="${k}" style="flex-wrap:wrap">${opts.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${cur==v}">${l}</button>`).join('')}</div>`;
+  pb.innerHTML=`<span class="lbl" style="margin-top:0">Je dois trouver</span>${seg('mode',FMODES.concat([['mix','Mélange']]),c.mode)}
+  <span class="lbl">Nombre de pavillons</span>${seg('n',[[10,'10'],[20,'20'],[27,'Tous (27)']],c.n)}
+  <button class="btn sun wide" id="fgo" style="margin-top:20px;min-height:58px;font-size:1.15rem">Hisser les couleurs</button>
+  <p class="mut small" style="text-align:center;margin-top:8px">10 milles par bonne réponse, bonus de vitesse et de série. Les pavillons que tu connais le moins reviennent plus souvent.</p>`;
+  pb.querySelectorAll('.seg').forEach(sg=>sg.onclick=e=>{const b=e.target.closest('button');if(!b)return;let v=b.dataset.v;if(sg.dataset.k==='n')v=+v;c[sg.dataset.k]=v;save();pav()});
+  $('#fgo').onclick=()=>startF({...c});
+ }
+}
+function startF(cfg){touchDay();const n=Math.min(cfg.n||10,PAV.length);
+ const pool=PAV.map(p=>({p,k:(cfg.mode==='mix'?fLevel(p):fBox(p.id,cfg.mode))+Math.random()*2.5})).sort((a,b)=>a.k-b.k).map(x=>x.p);
+ FQ={cfg,list:shuffle(pool.slice(0,n)),i:0,n,score:0,ok:0,combo:0,best:0,misses:[],locked:false};
+ document.body.classList.add('inquiz');$('#nav').classList.add('hidden');askF()}
+const fmult=()=>FQ.combo>=10?3:FQ.combo>=5?2:FQ.combo>=3?1.5:1;
+function askF(){hideFb();const p=FQ.list[FQ.i];const mode=FQ.cfg.mode==='mix'?FMODES[Math.floor(Math.random()*4)][0]:FQ.cfg.mode;
+ const opts=shuffle([p,...shuffle(PAV.filter(o=>o.id!==p.id)).slice(0,3)]);FQ.cur={p,mode,opts,t:Date.now()};FQ.locked=false;
+ const label=o=>mode==='sig'?o.fr:mode==='en'?o.en:mode==='nom'?o.id+' · '+o.name:'';
+ const ask={sig:'Que signifie ce pavillon ?',en:'What does this flag mean? (en anglais)',nom:'Comment s’appelle ce pavillon ?',flag:'Quel pavillon a ce sens ?'}[mode];
+ V.innerHTML=`<div class="qtop"><button class="x" id="fquit" aria-label="Quitter le quiz"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+ <div><div class="bar sea"><i style="width:${FQ.i/FQ.n*100}%"></i></div><div class="mut small">Pavillon ${FQ.i+1} sur ${FQ.n}</div></div>
+ <div class="qscore">${FQ.score}<span class="combo ${FQ.combo>=3?'':'hidden'}">×${fmult()}</span></div></div>
+ <div class="prompt pop">${mode==='flag'?`<div class="word" style="font-size:clamp(1.25rem,5vw,1.6rem);padding:26px 18px">${esc(p.fr)}</div>`:`<div class="bigflag">${flagSvg(p.id)}</div>`}</div>
+ <p class="ask">${ask}</p>
+ <div class="opts ${mode==='flag'?'pics':''}">${opts.map((o,i)=>mode==='flag'?`<button class="opt fpic" data-i="${i}" aria-label="Choix ${i+1}"><kbd>${i+1}</kbd>${flagSvg(o.id)}</button>`:`<button class="opt ${mode==='nom'?'':'long'}" data-i="${i}"><kbd>${i+1}</kbd><span>${esc(label(o))}</span></button>`).join('')}</div>`;
+ $('#fquit').onclick=()=>{if(FQ.i===0&&!FQ.ok){go('pav');return}modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>endF())};
+ V.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answerF(+b.dataset.i));
+}
+function answerF(i){if(!FQ||FQ.locked)return;FQ.locked=true;const {p,mode,opts,t}=FQ.cur;const ok=opts[i].id===p.id;
+ V.querySelectorAll('.opt').forEach(b=>{b.disabled=true;const o=opts[+b.dataset.i];if(o.id===p.id)b.classList.add('good');else if(+b.dataset.i===i)b.classList.add('bad')});
+ fSet(p.id,mode,ok);let gain=0;
+ if(ok){FQ.ok++;FQ.combo++;FQ.best=Math.max(FQ.best,FQ.combo);gain=Math.round((10+Math.max(0,5-Math.floor((Date.now()-t)/2000)))*fmult());FQ.score+=gain;addPts(gain);if(FQ.combo>=10)award('combo10');sfx(FQ.combo===3||FQ.combo===5||FQ.combo===10?'combo':'ok')}
+ else{FQ.combo=0;FQ.misses.push(p);sfx('ko')}
+ save();
+ const fb=$('#fb');fb.className='fb '+(ok?'ok':'ko');
+ fb.innerHTML=`<div class="fbin"><div class="fbflag">${flagSvg(p.id)}</div><div><h3>${ok?['Bravo !','Exact !','Bien vu !'][Math.floor(Math.random()*3)]+` <span class="small">+${gain} milles</span>`:'Raté…'}</h3>
+ <div style="font-weight:800">${esc(p.id)} · ${esc(p.name)} <button class="say" id="fsay" aria-label="Écouter en anglais" style="width:36px;height:36px">${SPK}</button></div><div class="small">${esc(p.fr)}</div><div class="small seatxt" style="font-weight:600">${esc(p.en)}</div></div>
+ <button class="btn wide" id="fnx" style="background:${ok?'var(--ok)':'var(--ko)'}">${FQ.i+1>=FQ.n?'Voir mon résultat':'Continuer'}</button></div>`;
+ requestAnimationFrame(()=>fb.classList.add('show'));
+ $('#fsay').onclick=()=>say(p.name+'. '+p.en);
+ const qs=V.querySelector('.qscore');if(qs)qs.innerHTML=`${FQ.score}<span class="combo ${FQ.combo>=3?'':'hidden'}">×${fmult()}</span>`;
+ $('#fnx').onclick=()=>{FQ.i++;if(FQ.i>=FQ.n)endF();else askF()};setTimeout(()=>$('#fnx')?.focus(),50);
+}
+function endF(){hideFb();const R=FQ;FQ=null;const asked=R.n,pc=Math.round(100*R.ok/asked);
+ S.quizzes++;award('premier');if(asked>=10&&R.ok===asked)award('signaux');save();sfx('end');setTimeout(pushScore,300);
+ const stars=pc>=90?3:pc>=70?2:pc>=40?1:0;if(stars===3)confetti();
+ const verdict=pc===100?'Pavois complet, bravo !':pc>=80?'Excellent signaleur !':pc>=60?'Bonne lecture des signaux':pc>=40?'Encore quelques pavillons à hisser':'On révise le lexique et on recommence';
+ V.innerHTML=`<div class="res card pop"><div class="mut small">Quiz pavillons${S.name?' · '+esc(S.name):''}</div><div class="stars">${[0,1,2].map(i=>STAR(i<stars)).join('')}</div>
+ <h1 style="font-size:1.7rem">${verdict}</h1><div class="big" style="margin:10px 0 2px">+${R.score}</div><div class="mut">milles gagnés</div>
+ <div class="kpis"><div class="kpi"><b>${R.ok}/${asked}</b><span>bonnes réponses</span></div><div class="kpi"><b>${pc}%</b><span>réussite</span></div><div class="kpi"><b>${R.best}</b><span>meilleure série</span></div></div>
+ <div class="row wrap" style="margin-top:16px"><button class="btn sun" id="fag" style="flex:1">Rejouer</button><button class="btn ghost" id="flx" style="flex:1">Voir le lexique</button></div></div>
+ ${R.misses.length?`<h2>À revoir (${R.misses.length})</h2><div class="card" style="padding:4px 14px">${R.misses.map(p=>`<div class="miss"><div style="width:64px">${flagSvg(p.id)}</div><div><b>${esc(p.id)} · ${esc(p.name)}</b><div class="small">${esc(p.fr)}</div></div><span></span></div>`).join('')}</div>`:''}
+ <button class="btn ghost wide" id="fhm" style="margin-top:12px">Retour à l’accueil</button>`;
+ $('#fag').onclick=()=>startF(R.cfg);$('#flx').onclick=()=>{pavTab='lex';go('pav')};$('#fhm').onclick=()=>go('home');
+ document.body.classList.remove('inquiz');$('#nav').classList.remove('hidden');header();scrollTo(0,0)}
+document.addEventListener('keydown',e=>{if(!FQ)return;if(!FQ.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(FQ.locked&&e.key==='Enter'&&$('#fnx')){e.preventDefault();$('#fnx').click()}});
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{if(!Q)return;if(e.target.tagName==='INPUT'&&e.key!=='Enter')return;if(!Q.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(Q.locked&&e.key==='Enter'&&$('#nx')){e.preventDefault();$('#nx').click()}});
-document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(!S.name)return;if(Q){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>{stopQ();go(b.dataset.go)})}else go(b.dataset.go)});
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(!S.name)return;if(FQ){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>go(b.dataset.go));return}if(Q){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>{stopQ();go(b.dataset.go)})}else go(b.dataset.go)});
 $('#snd').onclick=()=>{S.sound=!S.sound;save();sndIcon();if(S.sound)sfx('ok')};
 try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}catch(e){}
 
