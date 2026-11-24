@@ -199,6 +199,14 @@ details a{color:inherit;overflow-wrap:anywhere}
 @media (prefers-reduced-motion:reduce){.conf{display:none}.pop{animation:none}.fc{transition:none}.fb{transition:none}}
 @media (min-width:600px){.opts:not(.pics){grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:2.4rem}}
 .hidden{display:none!important}
+.btabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -4px 10px;padding:0 4px 2px}
+.btabs button{flex:none;border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:5px 12px;font-weight:700;font-size:.85rem;min-height:34px}
+.btabs button[aria-pressed=true]{background:var(--sea);border-color:var(--sea);color:#fff}
+.cd{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:12px;padding:8px 12px;font-size:.88rem;margin-top:10px}
+.cd b{font:800 1.05rem var(--disp);font-variant-numeric:tabular-nums;white-space:nowrap}
+.promo .flag{width:150px;height:108px;margin:6px auto 14px;animation:hoist 1s ease-out}
+@keyframes hoist{0%{transform:translateY(60px) scale(.6);opacity:0}70%{transform:translateY(-6px) scale(1.04);opacity:1}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.promo .flag{animation:none}}
 .flaggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .fcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;display:grid;gap:6px;align-content:start}
 .fsvg svg{width:100%;height:auto;display:block;filter:drop-shadow(0 2px 0 rgba(0,0,0,.18))}
@@ -269,10 +277,11 @@ body.inquiz main{padding-bottom:calc(240px + env(safe-area-inset-bottom,0px))}
 {
 const $=s=>document.querySelector(s), V=$('#v');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const shuffle=(a,r=Math.random)=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);h^=h>>>16;return(h>>>0)/4294967296}}
 const today=()=>new Date().toLocaleDateString('sv');
 const KEY='lexmarin.v1';
-const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:'',fm:{},fcfg:{mode:'sig',n:10}};
+const FRESH={name:'',pts:0,streak:0,last:'',day:'',dayPts:0,daily:'',m:{},st:{},wrong:{},badges:[],quizzes:0,typedOk:0,sound:true,cfg:{q:'img',a:'en',fmt:'qcm',n:10,th:[]},bestChrono:0,tipOff:false,week:'',weekPts:0,pid:'',pushed:-1,pushedName:'',uid:'',rt:'',fm:{},fcfg:{mode:'sig',n:10},wPts:0,fPts:0,secMig:0,dayKey:'',dayScore:0,pushedKey:''};
 let S=load(), W=[], SECS=[], SEC={}, Q=null;
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return Object.assign(structuredClone(FRESH),d)}catch(e){}return structuredClone(FRESH)}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -336,7 +345,8 @@ function check(w,lang,txt){const t=norm(txt);if(!t)return 0;const vs=variants(w,
 
 /* ---------- streak & points ---------- */
 function touchDay(){const d=today();if(S.day!==d){S.day=d;S.dayPts=0}if(S.last!==d){const y=new Date(Date.now()-864e5).toLocaleDateString('sv');S.streak=S.last===y?S.streak+1:1;S.last=d;if(S.streak>=3)award('fidele');if(S.streak>=7)award('semaine')}}
-function addPts(p){const before=rankOf(S.pts);S.pts+=p;S.dayPts+=p;const wk=weekKey();if(S.week!==wk){S.week=wk;S.weekPts=0}S.weekPts+=p;const after=rankOf(S.pts);if(after>before){toast('Promotion : '+RANKS[after][1]+' !');confetti();sfx('badge')}if(S.pts>=2500)award('capitaine');header()}
+function addPts(p,sec='w'){const before=rankOf(S.pts);S.pts+=p;S.dayPts+=p;if(sec==='f')S.fPts+=p;else S.wPts+=p;const wk=weekKey();if(S.week!==wk){S.week=wk;S.weekPts=0}S.weekPts+=p;const after=rankOf(S.pts);if(after>before)promo(after);if(S.pts>=2500)award('capitaine');header()}
+function promo(i){confetti();sfx('badge');const nx=RANKS[i+1];const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="card promo pop" role="dialog" aria-modal="true" style="text-align:center"><div class="mut small">Promotion</div><div class="flag">${flag(RANKS[i][2])}</div><h2 style="margin:0 0 6px;font-size:1.8rem">${RANKS[i][1]} !</h2><p class="mut" style="margin:0 0 16px">${nx?`Prochain grade : ${nx[1]} à ${nx[0].toLocaleString('fr')} milles.`:'Tu as atteint le plus haut grade. Respect, Amiral !'}</p><button class="btn sun wide">Merci, capitaine</button></div>`;document.body.appendChild(m);m.querySelector('button').onclick=()=>m.remove()}
 function header(){$('#hpts').textContent=S.pts.toLocaleString('fr');$('#hstreak').textContent=S.streak&&(S.last===today()||S.last===new Date(Date.now()-864e5).toLocaleDateString('sv'))?S.streak:0;sndIcon()}
 
 /* ---------- UI helpers ---------- */
@@ -365,7 +375,7 @@ function home(){
   <div class="kpi"><b>${Math.min(dp,goal)}/${goal}</b><span>objectif du jour</span></div>
   <div class="kpi"><b>${seenCount()}/104</b><span>mots vus</span></div>
  </div>
- <button class="btn sun wide" id="daily" style="margin-top:14px;min-height:56px" ${dayDone?'disabled':''}>${dayDone?'Défi du jour relevé, reviens demain':'Défi du jour : 10 questions, points doublés'}</button>
+ <button class="btn sun wide" id="daily" style="margin-top:14px;min-height:56px" ${dayDone?'disabled':''}>${dayDone?'Défi du jour relevé : '+(S.dayKey===today()?S.dayScore:0)+' milles':'Défi du jour : les mêmes 10 questions pour tous, points doublés'}</button>
  <div class="card" id="top3" style="margin-top:14px"></div>
  <h2>Jouer</h2>
  <div class="modes">${['en','fr','img'].map(q=>`<button class="mode" data-q="${q}"><span class="ic" style="background:${q==='en'?'#1f3f8f':q==='fr'?'#e2353d':'#fff'}">${q==='img'?thumb(sample):q==='en'?'<span style="width:56px">'+UK+'</span>':'<span style="width:56px">'+FRF+'</span>'}</span><span><b>${MODEINFO[q][0]}</b><span class="mut small">${MODEINFO[q][1]}</span></span><span class="pc">${mastery(q)}%</span></button>`).join('')}</div>
@@ -416,15 +426,16 @@ function pickPool(cfg){
 }
 function start(cfg){
  touchDay();
- const pool=pickPool(cfg);
+ const rng=cfg.daily?seeded('defi-'+today()):Math.random;
+ const pool=cfg.daily?shuffle(W.slice(),rng):pickPool(cfg);
  const n=cfg.fmt==='chrono'?999:Math.min(cfg.n||10,pool.length);
- Q={cfg,pool,list:cfg.fmt==='chrono'?shuffle(pool.slice()):pool.slice(0,n),i:0,n,score:0,ok:0,combo:0,best:0,misses:[],fifty:2,hints:3,t0:Date.now(),left:60,timer:null,locked:false};
- Q.list=shuffle(Q.list);
+ Q={rng,cfg,pool,list:cfg.fmt==='chrono'?shuffle(pool.slice()):pool.slice(0,n),i:0,n,score:0,ok:0,combo:0,best:0,misses:[],fifty:2,hints:3,t0:Date.now(),left:60,timer:null,locked:false};
+ if(!cfg.daily)Q.list=shuffle(Q.list);
  document.body.classList.add('inquiz');$('#nav').classList.add('hidden');
  if(cfg.fmt==='chrono'){Q.timer=setInterval(()=>{if(Q.locked&&Q.left>0){} Q.left=Math.max(0,Q.left-.25);const t=$('#tm');if(t){t.querySelector('i').style.width=Math.min(100,Q.left/60*100)+'%';t.classList.toggle('low',Q.left<10);$('#tml').textContent=Math.ceil(Q.left)+' s'}if(Q.left<=0)end()},250)}
  ask();
 }
-function curMode(){const c=Q.cfg;if(c.q!=='mix')return[c.q,c.a];const ms=[['en','fr'],['fr','en'],['img','en'],['img','fr'],['en','img']];return ms[Math.floor(Math.random()*ms.length)]}
+function curMode(){const c=Q.cfg;if(c.q!=='mix')return[c.q,c.a];const ms=[['en','fr'],['fr','en'],['img','en'],['img','fr'],['en','img']];return ms[Math.floor(Q.rng()*ms.length)]}
 function ask(){
  hideFb();
  if(Q.cfg.fmt==='chrono'&&Q.i>=Q.list.length){Q.list=Q.list.concat(shuffle(Q.pool.slice()))}
@@ -440,7 +451,7 @@ function ask(){
  <p class="ask">${askTxt}</p>
  ${opts?`<div class="opts ${a==='img'?'pics':''}">${opts.map((o,i)=>a==='img'?`<button class="opt pic" data-i="${i}" style="position:relative"><kbd>${i+1}</kbd><img src="${esc(o.img)}" alt="Choix ${i+1}"></button>`:`<button class="opt" data-i="${i}"><kbd>${i+1}</kbd><span>${esc(a==='en'?o.en:o.fr)}</span></button>`).join('')}</div>`
  :`<form class="typing" id="tf"><input id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${a==='en'?'Réponse en anglais':'Réponse en français'}" enterkeyhint="done"><button class="btn">Valider</button></form>`}
- ${chrono?'':`<div class="jokers">${opts?`<button class="jk" id="j50" ${Q.fifty?'':'disabled'}>50/50 (${Q.fifty})</button>`:`<button class="jk" id="jh" ${Q.hints?'':'disabled'}>Indice (${Q.hints})</button>`}<button class="jk" id="jskip">Je ne sais pas</button></div>`}`;
+ ${chrono?'':`<div class="jokers">${opts&&!Q.cfg.daily?`<button class="jk" id="j50" ${Q.fifty?'':'disabled'}>50/50 (${Q.fifty})</button>`:`<button class="jk" id="jh" ${Q.hints?'':'disabled'}>Indice (${Q.hints})</button>`}<button class="jk" id="jskip">Je ne sais pas</button></div>`}`;
  $('#quit').onclick=()=>{if(Q.i===0&&!Q.ok){stopQ();go('home');return}modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>end())};
  $('#sayq')?.addEventListener('click',()=>say(w.en));
  if(q==='en'&&S.sound&&!chrono)setTimeout(()=>Q&&Q.cur?.w===w&&say(w.en),250);
@@ -450,12 +461,12 @@ function ask(){
  $('#jh')?.addEventListener('click',()=>{if(!Q.hints||Q.cur.hint)return;Q.hints--;Q.cur.hint=true;const t=(a==='en'?w.en:w.fr).split(' / ')[0];const inp=$('#ans');inp.value=t.slice(0,Math.max(1,Math.ceil(t.length/3)));inp.focus();$('#jh').disabled=true;$('#jh').textContent='Indice ('+Q.hints+')'});
  $('#jskip')?.addEventListener('click',()=>answer(null));
 }
-function distract(w,a){
+function distract(w,a){const r=Q?.rng||Math.random;
  const key=o=>a==='img'?o.img:a==='en'?o.en:o.fr;
- const same=shuffle(W.filter(o=>o.s===w.s&&o.id!==w.id)),other=shuffle(W.filter(o=>o.s!==w.s));
+ const same=shuffle(W.filter(o=>o.s===w.s&&o.id!==w.id),r),other=shuffle(W.filter(o=>o.s!==w.s),r);
  const out=[w],seen=new Set([key(w)]);
- for(const o of same.concat(other)){if(out.length>=4)break;if(seen.has(key(o)))continue;if(a!=='img'||Math.random()<.85||!same.includes(o)){out.push(o);seen.add(key(o))}}
- return shuffle(out);
+ for(const o of same.concat(other)){if(out.length>=4)break;if(seen.has(key(o)))continue;if(a!=='img'||r()<.85||!same.includes(o)){out.push(o);seen.add(key(o))}}
+ return shuffle(out,r);
 }
 const mult=()=>Q.combo>=10?3:Q.combo>=5?2:Q.combo>=3?1.5:1;
 function answer(x){
@@ -504,7 +515,7 @@ function end(){
  S.quizzes++;award('premier');setTimeout(pushScore,300);
  if(R.cfg.fmt!=='chrono'&&asked>=10&&R.ok===asked)award('sansfaute');
  if(R.cfg.fmt==='chrono'){if(R.ok>=15)award('rafale');if(R.ok>S.bestChrono){S.bestChrono=R.ok;if(R.ok>0)toast('Nouveau record Chrono : '+R.ok)}}
- if(R.cfg.daily){S.daily=today();if(pc>=70)award('defi')}
+ if(R.cfg.daily){S.daily=today();if(S.dayKey!==today()){S.dayKey=today();S.dayScore=R.score}if(pc>=70)award('defi')}
  save();sfx('end');
  const stars=pc>=90?3:pc>=70?2:pc>=40?1:0;if(stars===3)confetti();
  const verdict=pc===100?'Sans faute, capitaine !':pc>=80?'Excellent quart !':pc>=60?'Bonne navigation':pc>=40?'Mer agitée, on continue':'On reprend la barre ensemble';
@@ -571,7 +582,7 @@ function prog(){
  <p class="mut small" style="text-align:center">Ta progression reste sur cet appareil, dans ce navigateur.</p>`;
  $('#rv')?.addEventListener('click',()=>start({...S.cfg,src:'err'}));
  $('#rename').onclick=()=>{modal(`<h3>Nouveau prénom</h3><input id="rn" class="search" style="border-radius:14px;margin-top:10px" maxlength="20" value="${esc(S.name)}">`,()=>{});const m=document.querySelector('.modal');const y=m.querySelector('[data-yes]');y.style.background='var(--sea)';y.onclick=()=>{const v=m.querySelector('#rn').value.trim().slice(0,20);if(v){S.name=v;save();pushScore();toast('Prénom changé')}m.remove();prog()}};
- $('#reset').onclick=()=>modal('<h3>Tout remettre à zéro ?</h3><p class="mut">Milles, badges et maîtrise des mots seront effacés de cet appareil.</p>',()=>{const keep={name:S.name,sound:S.sound,cfg:S.cfg,pid:S.pid,uid:S.uid,rt:S.rt};S=Object.assign(structuredClone(FRESH),keep);save();header();prog();toast('Progression remise à zéro')});
+ $('#reset').onclick=()=>modal('<h3>Tout remettre à zéro ?</h3><p class="mut">Milles, badges et maîtrise des mots seront effacés de cet appareil.</p>',()=>{const keep={name:S.name,sound:S.sound,cfg:S.cfg,pid:S.pid,uid:S.uid,rt:S.rt,secMig:1};S=Object.assign(structuredClone(FRESH),keep);save();header();prog();toast('Progression remise à zéro')});
 }
 
 
@@ -581,36 +592,51 @@ const FB={apiKey:'AIzaSyB6IxXgQymBcpAG4luFt3JjbyiUyBCG9hk',projectId:'lexique-ma
 const FBON=!!(FB.apiKey&&FB.projectId);
 const FBBASE='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FB.projectId)+'/databases/%28default%29/documents';
 function weekKey(d=new Date()){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=t.getUTCFullYear();return y+'-W'+String(Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7)).padStart(2,'0')}
-let TOP=null,topAt=0,topErr=false,topBusy=false,pushing=false,pushAgain=false;
+const curWeekPts=()=>S.week===weekKey()?S.weekPts:0;
+let TOP=null,topAt=0,topErr=false,topBusy=false,pushing=false,pushAgain=false,boardTab='week',cdTimer=null;
+const num=v=>{const n=Number(v?.integerValue??v?.doubleValue??0);return Number.isFinite(n)&&n>0?Math.floor(n):0};
 async function loadTop3(force){if(!FBON||topBusy)return;if(!force&&TOP&&Date.now()-topAt<20000)return;topBusy=true;
- try{const r=await fetch(FBBASE+':runQuery?key='+encodeURIComponent(FB.apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'scores'}],where:{fieldFilter:{field:{fieldPath:'pts'},op:'GREATER_THAN',value:{integerValue:'0'}}},orderBy:[{field:{fieldPath:'pts'},direction:'DESCENDING'}],limit:3}})});
-  if(!r.ok)throw new Error(r.status);const arr=await r.json();
-  TOP=(Array.isArray(arr)?arr:[]).filter(x=>x.document).map(x=>{const f=x.document.fields||{};const p=Number(f.pts?.integerValue??f.pts?.doubleValue??0);return{id:x.document.name.split('/').pop(),name:String(f.name?.stringValue||'Matelot').slice(0,20),pts:Number.isFinite(p)?p:0}});topAt=Date.now();topErr=false}
+ try{const r=await fetch(FBBASE+'/scores?pageSize=300&key='+encodeURIComponent(FB.apiKey));if(!r.ok)throw new Error(r.status);const d=await r.json();
+  TOP=(d.documents||[]).map(x=>{const f=x.fields||{};return{id:x.name.split('/').pop(),name:String(f.name?.stringValue||'Matelot').slice(0,20),pts:num(f.pts),week:String(f.week?.stringValue||''),weekPts:num(f.weekPts),wPts:num(f.wPts),fPts:num(f.fPts),day:String(f.day?.stringValue||''),dayPts:num(f.dayPts)}});topAt=Date.now();topErr=false}
  catch(e){topErr=true}
  topBusy=false;renderTop3()}
-function renderTop3(){const el=$('#top3');if(!el)return;
- const head='<h3 style="font-size:1.3rem;margin-bottom:6px">Les 3 meilleurs marins</h3>';
- if(!FBON){el.innerHTML=head+'<p class="mut small" style="margin:0">Le classement commun arrive bientôt.</p>';return}
- if(TOP===null){el.innerHTML=head+`<p class="mut small" style="margin:0">${topErr?'Classement injoignable pour le moment (connexion ?).':'Chargement du classement…'}</p>`;return}
- if(!TOP.length){el.innerHTML=head+'<p class="mut small" style="margin:0">Personne encore : termine un quiz pour prendre la tête !</p>';return}
- const order=[TOP[1],TOP[0],TOP[2]],place=[2,1,3];
- el.innerHTML=head+`<div class="podium">${order.map((r,k)=>r?`<div class="pod p${place[k]} ${r.id===S.uid?'me':''}"><div class="flag">${flag(RANKS[rankOf(r.pts)][2])}</div><div class="nm">${esc(r.name)}</div><div class="pt">${r.pts.toLocaleString('fr')}</div><div class="step">${place[k]}</div></div>`:'<div></div>').join('')}</div>`+
- `<p class="mut small" style="margin:0">${TOP.some(r=>r.id===S.uid)?'Tu es sur le podium, bravo !':'Toi : '+S.pts.toLocaleString('fr')+' milles. '+(TOP.length===3?'Encore '+Math.max(0,TOP[2].pts-S.pts+1).toLocaleString('fr')+' pour le podium.':'Une place t’attend sur le podium.')}</p>`;
+const BTABS=[['week','Semaine'],['day','Défi du jour'],['w','Mots'],['f','Signaux'],['all','Total']];
+function boardList(tab){const wk=weekKey(),td=today();const L=(TOP||[]).map(r=>({...r,v:tab==='week'?(r.week===wk?r.weekPts:0):tab==='day'?(r.day===td?r.dayPts:0):tab==='w'?r.wPts:tab==='f'?r.fPts:r.pts})).filter(r=>r.v>0);return L.sort((a,b)=>b.v-a.v)}
+function myVal(tab){return tab==='week'?curWeekPts():tab==='day'?(S.dayKey===today()?S.dayScore:0):tab==='w'?S.wPts:tab==='f'?S.fPts:S.pts}
+function untilTxt(ms){const m=Math.max(0,Math.floor(ms/60000)),d=Math.floor(m/1440),h=Math.floor(m%1440/60),mn=m%60;return(d?d+' j ':'')+(d||h?h+' h ':'')+String(mn).padStart(d||h?2:1,'0')+' min'}
+function nextMonday(){const n=new Date(),t=new Date(n.getFullYear(),n.getMonth(),n.getDate());t.setDate(t.getDate()+((8-(t.getDay()||7))||7));return t}
+function nextMidnight(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate()+1)}
+function cdHtml(tab){if(tab==='week')return`<div class="cd"><span>Remise à zéro lundi à 0 h, dans</span><b id="cdv">${untilTxt(nextMonday()-Date.now())}</b></div>`;if(tab==='day')return`<div class="cd"><span>${S.daily===today()?'Nouveau défi dans':'Le défi du jour se termine dans'}</span><b id="cdv">${untilTxt(nextMidnight()-Date.now())}</b></div>`;return''}
+function tickCd(){const e=$('#cdv');if(!e){clearInterval(cdTimer);cdTimer=null;return}e.textContent=untilTxt((boardTab==='week'?nextMonday():nextMidnight())-Date.now())}
+function renderTop3(){const el=$('#top3');if(!el)return;const tab=boardTab;
+ const head=`<h3 style="font-size:1.3rem;margin-bottom:8px">Les 3 meilleurs marins</h3><div class="btabs" id="btabs">${BTABS.map(([k,l])=>`<button data-b="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>`;
+ let body;
+ if(!FBON)body='<p class="mut small" style="margin:0">Le classement commun arrive bientôt.</p>';
+ else if(TOP===null)body=`<p class="mut small" style="margin:0">${topErr?'Classement injoignable pour le moment (connexion ?).':'Chargement du classement…'}</p>`;
+ else{const L=boardList(tab),top=L.slice(0,3),mine=myVal(tab),meIn=top.some(r=>r.id===S.uid);
+  if(!top.length)body=`<p class="mut small" style="margin:0">${tab==='day'?'Personne n’a encore relevé le défi du jour : à toi de commencer !':tab==='week'?'Personne cette semaine : prends la tête !':'Personne encore : termine un quiz pour prendre la tête !'}</p>`;
+  else{const order=[top[1],top[0],top[2]],place=[2,1,3];
+   body=`<div class="podium">${order.map((r,k)=>r?`<div class="pod p${place[k]} ${r.id===S.uid?'me':''}"><div class="flag">${flag(RANKS[rankOf(r.pts)][2])}</div><div class="nm">${esc(r.name)}</div><div class="pt">${r.v.toLocaleString('fr')}</div><div class="step">${place[k]}</div></div>`:'<div></div>').join('')}</div>`+
+   `<p class="mut small" style="margin:0">${meIn?'Tu es sur le podium, bravo !':'Toi : '+mine.toLocaleString('fr')+' milles. '+(top.length===3?'Encore '+Math.max(1,top[2].v-mine+1).toLocaleString('fr')+' pour le podium.':'Une place t’attend sur le podium.')}</p>`}}
+ el.innerHTML=head+body+cdHtml(tab);
+ $('#btabs').onclick=e=>{const b=e.target.closest('button');if(b){boardTab=b.dataset.b;renderTop3()}};
+ if((tab==='week'||tab==='day')&&!cdTimer)cdTimer=setInterval(tickCd,20000);
 }
 // Identifiant anonyme Firebase : invisible pour le joueur, il garantit que chacun n'écrit que sa propre ligne.
 let AUTH=null;
 async function fbAuth(){if(AUTH&&Date.now()<AUTH.exp-60000)return AUTH;const k=encodeURIComponent(FB.apiKey);
  try{
   if(S.rt){const r=await fetch('https://securetoken.googleapis.com/v1/token?key='+k,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(S.rt)});
-   if(r.ok){const d=await r.json();AUTH={uid:d.user_id,token:d.id_token,exp:Date.now()+(+d.expires_in||3600)*1000};S.rt=d.refresh_token||S.rt;if(S.uid!==d.user_id){S.uid=d.user_id;S.pushed=-1}save();return AUTH}}
+   if(r.ok){const d=await r.json();AUTH={uid:d.user_id,token:d.id_token,exp:Date.now()+(+d.expires_in||3600)*1000};S.rt=d.refresh_token||S.rt;if(S.uid!==d.user_id){S.uid=d.user_id;S.pushedKey=''}save();return AUTH}}
   const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+k,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});
-  if(!r.ok)return null;const d=await r.json();AUTH={uid:d.localId,token:d.idToken,exp:Date.now()+(+d.expiresIn||3600)*1000};S.rt=d.refreshToken;S.uid=d.localId;S.pushed=-1;save();return AUTH}
+  if(!r.ok)return null;const d=await r.json();AUTH={uid:d.localId,token:d.idToken,exp:Date.now()+(+d.expiresIn||3600)*1000};S.rt=d.refreshToken;S.uid=d.localId;S.pushedKey='';save();return AUTH}
  catch(e){return null}}
-async function pushScore(){if(!FBON||!S.name)return;if(S.uid&&S.pts===S.pushed&&S.name===S.pushedName)return;if(pushing){pushAgain=true;return}pushing=true;
- const pts=S.pts,name=S.name;
+function scorePayload(){const iv=n=>({integerValue:String(Math.max(0,Math.floor(n||0)))});const wp=Math.min(curWeekPts(),S.pts);
+ return{name:{stringValue:S.name},pts:iv(S.pts),week:{stringValue:weekKey()},weekPts:iv(wp),wPts:iv(S.wPts),fPts:iv(S.fPts),day:{stringValue:S.dayKey||''},dayPts:iv(Math.min(S.dayScore,5000))}}
+async function pushScore(){if(!FBON||!S.name)return;const fields=scorePayload(),key=JSON.stringify(fields);if(S.uid&&key===S.pushedKey)return;if(pushing){pushAgain=true;return}pushing=true;
  try{const a=await fbAuth();
-  if(a){const r=await fetch(FBBASE+'/scores/'+encodeURIComponent(a.uid)+'?key='+encodeURIComponent(FB.apiKey),{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.token},body:JSON.stringify({fields:{name:{stringValue:name},pts:{integerValue:String(pts)},at:{timestampValue:new Date().toISOString()}}})});
-   if(r.ok){S.pushed=pts;S.pushedName=name;save();topAt=0;loadTop3(true)}}}catch(e){}
+  if(a){const r=await fetch(FBBASE+'/scores/'+encodeURIComponent(a.uid)+'?key='+encodeURIComponent(FB.apiKey),{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.token},body:JSON.stringify({fields:{...fields,at:{timestampValue:new Date().toISOString()}}})});
+   if(r.ok){S.pushedKey=key;save();topAt=0;loadTop3(true)}}}catch(e){}
  pushing=false;if(pushAgain){pushAgain=false;pushScore()}}
 /* ---------- first launch: first name ---------- */
 function gate(){view='gate';$('#nav').classList.add('hidden');
@@ -733,7 +759,7 @@ function askF(){hideFb();const p=FQ.list[FQ.i];const mode=FQ.cfg.mode==='mix'?FM
 function answerF(i){if(!FQ||FQ.locked)return;FQ.locked=true;const {p,mode,opts,t}=FQ.cur;const ok=opts[i].id===p.id;
  V.querySelectorAll('.opt').forEach(b=>{b.disabled=true;const o=opts[+b.dataset.i];if(o.id===p.id)b.classList.add('good');else if(+b.dataset.i===i)b.classList.add('bad')});
  fSet(p.id,mode,ok);let gain=0;
- if(ok){FQ.ok++;FQ.combo++;FQ.best=Math.max(FQ.best,FQ.combo);gain=Math.round((10+Math.max(0,5-Math.floor((Date.now()-t)/2000)))*fmult());FQ.score+=gain;addPts(gain);if(FQ.combo>=10)award('combo10');sfx(FQ.combo===3||FQ.combo===5||FQ.combo===10?'combo':'ok')}
+ if(ok){FQ.ok++;FQ.combo++;FQ.best=Math.max(FQ.best,FQ.combo);gain=Math.round((10+Math.max(0,5-Math.floor((Date.now()-t)/2000)))*fmult());FQ.score+=gain;addPts(gain,'f');if(FQ.combo>=10)award('combo10');sfx(FQ.combo===3||FQ.combo===5||FQ.combo===10?'combo':'ok')}
  else{FQ.combo=0;FQ.misses.push(p);sfx('ko')}
  save();
  const fb=$('#fb');fb.className='fb '+(ok?'ok':'ko');
@@ -766,7 +792,7 @@ try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}catch(e){
 
 /* ---------- boot ---------- */
 V.innerHTML='<p class="mut" style="text-align:center;padding:40px 0">Chargement du lexique…</p>';
-fetch('lexique.json').then(r=>r.json()).then(d=>{SECS=d.secs;W=d.words;SECS.forEach(s=>SEC[s.id]=s);if(!S.pid){S.pid='p'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,20):Math.random().toString(36).slice(2)+Date.now().toString(36));save()}header();if(S.name){go('home');pushScore()}else gate()}).catch(()=>{V.innerHTML='<div class="card"><h3>Impossible de charger le lexique</h3><p class="mut">Vérifie ta connexion puis recharge la page.</p></div>'});
+fetch('lexique.json').then(r=>r.json()).then(d=>{SECS=d.secs;W=d.words;SECS.forEach(s=>SEC[s.id]=s);if(!S.pid){S.pid='p'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,20):Math.random().toString(36).slice(2)+Date.now().toString(36));save()}if(!S.secMig){S.wPts=Math.max(0,S.pts-S.fPts);S.secMig=1;save()}header();if(S.name){go('home');pushScore()}else gate()}).catch(()=>{V.innerHTML='<div class="card"><h3>Impossible de charger le lexique</h3><p class="mut">Vérifie ta connexion puis recharge la page.</p></div>'});
 }
 </script>
 </body>

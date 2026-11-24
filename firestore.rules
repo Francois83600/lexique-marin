@@ -7,13 +7,27 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if request.auth != null
         && request.auth.uid == playerId
-        && request.resource.data.keys().hasOnly(['name', 'pts', 'at'])
+        && request.resource.data.keys().hasOnly(['name', 'pts', 'at', 'week', 'weekPts', 'wPts', 'fPts', 'day', 'dayPts'])
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 20
         && request.resource.data.pts is int
         && request.resource.data.pts >= 0
-        && request.resource.data.pts <= 1000000;
+        && request.resource.data.pts <= 1000000
+        && request.resource.data.get('week', '') is string
+        && request.resource.data.get('week', '').size() <= 10
+        && request.resource.data.get('day', '') is string
+        && request.resource.data.get('day', '').size() <= 10
+        && request.resource.data.get('weekPts', 0) is int
+        && request.resource.data.get('weekPts', 0) >= 0
+        && request.resource.data.get('weekPts', 0) <= request.resource.data.pts
+        && request.resource.data.get('wPts', 0) is int
+        && request.resource.data.get('wPts', 0) >= 0
+        && request.resource.data.get('fPts', 0) is int
+        && request.resource.data.get('fPts', 0) >= 0
+        && request.resource.data.get('dayPts', 0) is int
+        && request.resource.data.get('dayPts', 0) >= 0
+        && request.resource.data.get('dayPts', 0) <= 5000;
       allow delete: if false;
     }
   }
