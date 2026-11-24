@@ -118,6 +118,9 @@
     'Le quiz d’une escale mélange photos, mots français et anglais sur son thème. Tu peux rejouer les escales déjà atteintes.': 'A port’s quiz mixes pictures, French and English words on its theme. You can replay ports you have already reached.',
     'Carte du voyage': 'Voyage map', 'Duel': 'Duel', 'Deux joueurs sur le même téléphone, chacun son tour : 5 questions chacun. Les points du duel ne comptent pas dans le classement.': 'Two players on the same phone, taking turns: 5 questions each. Duel points do not count in the leaderboard.',
     'Joueur 1': 'Player 1', 'Joueur 2': 'Player 2', 'Thème': 'Theme', 'Que le meilleur gagne': 'May the best sailor win', 'Égalité parfaite !': 'Perfect tie!', 'Revanche': 'Rematch', 'Équipier': 'Crewmate',
+    'Touche un mot pour voir sa fiche, ou le haut-parleur pour l’écouter.': 'Tap a word to see its card, or the speaker to listen.',
+    'La voix n’est pas disponible sur cet appareil.': 'Voice is not available on this device.', 'Pas de son ? Désactive le mode silencieux de l’iPhone et monte le volume.': 'No sound? Turn off the iPhone’s silent mode and turn up the volume.',
+    'Fermer': 'Close', 'Maîtrise': 'Mastery', 'Dessin réalisé pour cette app.': 'Drawing made for this app.', 'Voir la fiche du mot': 'See the word card',
     'Choix 1': 'Choice 1', 'Choix 2': 'Choice 2', 'Choix 3': 'Choice 3', 'Choix 4': 'Choice 4', 'Écouter en anglais': 'Listen in English', 'Écouter la prononciation': 'Listen to the pronunciation'
   };
   function rank(r) { return RANK[r] || r; }
@@ -166,7 +169,8 @@
     [/^Progression récupérée, bon retour à bord (.+) !$/, 'Progress restored, welcome back aboard $1!'],
     [/^Orthographe exacte : (.+)$/, 'Exact spelling: $1'],
     [/^(.+) · verrouillée$/, function (m, t) { return T(t) + ' · locked'; }],
-    [/^(\d+) mots, en français et en anglais britannique\. Touche le haut-parleur pour écouter\.$/, '$1 words, in French and British English. Tap the speaker to listen (in French).'],
+    [/^(\d+) mots, en français et en anglais britannique\. Touche un mot pour voir sa fiche, ou le haut-parleur pour l’écouter\.$/, '$1 words, in French and British English. Tap a word to see its card, or the speaker to listen (in French).'],
+    [/^Fiche du mot (.+)$/, 'Word card: $1'],
     [/^(\d+) cartes revues\.$/, '$1 cards reviewed.'],
     [/^(\d+) pavillons$/, '$1 flags']
   ];

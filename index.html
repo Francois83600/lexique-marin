@@ -201,6 +201,21 @@ details a{color:inherit;overflow-wrap:anywhere}
 @media (prefers-reduced-motion:reduce){.conf{display:none}.pop{animation:none}.fc{transition:none}.fb{transition:none}}
 @media (min-width:600px){.opts:not(.pics){grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:2.4rem}}
 .hidden{display:none!important}
+[data-wid]{cursor:pointer}
+.sheet{align-items:end;padding:0}
+.wsheet{max-width:560px!important;width:100%;border-radius:22px 22px 0 0;padding:0 0 calc(18px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow:auto;position:relative}
+.wsheet .wimg{aspect-ratio:3/2;background:#fff;display:grid;place-items:center;border-radius:22px 22px 0 0;overflow:hidden}
+.wsheet .wimg img{width:100%;height:100%;object-fit:contain}
+.wsheet .wbody{padding:14px 18px 0}
+.wsheet .wx{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#0b2236;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.wsheet h2{margin:6px 0 2px;font-size:1.9rem}
+.wsheet .wen{font:800 1.3rem/1.2 var(--disp);color:var(--seatxt)}
+.wsheet .wdef{margin:12px 0 0;font-size:1rem;line-height:1.5}
+.wsheet .wdef.en{color:var(--mut);font-style:italic;margin-top:6px}
+.wsheet .wsay{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.wsheet .wsay button{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--soft);border-radius:999px;padding:6px 14px;font-weight:800;min-height:42px;color:var(--ink)}
+.wsheet .wsay svg{width:20px;height:20px;color:var(--seatxt)}
+.face.back .f3{font-size:.95rem;line-height:1.4;color:var(--mut);max-width:30ch;margin:4px auto 0}
 .tcode{font:800 clamp(2.4rem,12vw,3.4rem)/1 var(--disp);letter-spacing:.18em;text-align:center;color:var(--seatxt);margin:10px 0 4px}
 .codein{text-transform:uppercase;letter-spacing:.3em;text-align:center;font-weight:800;font-size:1.4rem}
 .linkbtn{border:0;background:transparent;color:var(--seatxt);font-weight:800;text-decoration:underline;padding:10px;min-height:44px}
@@ -363,8 +378,22 @@ function award(id){if(S.badges.includes(id))return;S.badges.push(id);const b=BAD
 
 /* ---------- sound & speech ---------- */
 let AC=null;
-function sfx(t){if(!S.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const seq={ok:[[660,.08],[880,.12]],ko:[[220,.18],[170,.22]],combo:[[660,.06],[880,.06],[1100,.12]],badge:[[523,.1],[659,.1],[784,.1],[1046,.2]],end:[[392,.12],[523,.12],[659,.12],[784,.25]]}[t]||[];let at=AC.currentTime;seq.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=t==='ko'?'sawtooth':'triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,at);g.gain.exponentialRampToValueAtTime(.001,at+d);o.connect(g).connect(AC.destination);o.start(at);o.stop(at+d);at+=d*.9})}catch(e){}}
-function say(txt,lang='en-GB'){if(S.lang==='en'&&lang==='en-GB'&&FRBY[txt]){txt=FRBY[txt];lang='fr-FR'}try{const u=new SpeechSynthesisUtterance(txt.replace(/\s\/\s/g,', ').replace(/\(.*?\)/g,''));u.lang=lang;const vs=speechSynthesis.getVoices();const v=vs.find(v=>v.lang===lang)||vs.find(v=>v.lang.startsWith(lang.slice(0,2)));if(v)u.voice=v;u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function sfx(t){if(!S.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const seq={ok:[[660,.08],[880,.12]],ko:[[220,.18],[170,.22]],combo:[[660,.06],[880,.06],[1100,.12]],badge:[[523,.1],[659,.1],[784,.1],[1046,.2]],end:[[392,.12],[523,.12],[659,.12],[784,.25]]}[t]||[];let at=AC.currentTime;seq.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=t==='ko'?'sawtooth':'triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,at);g.gain.exponentialRampToValueAtTime(.001,at+d);o.connect(g).connect(AC.destination);o.start(at);o.stop(at+d);at+=d*.9})}catch(e){}}
+/* Sound on iPhone: unlock audio on the first touch, never cancel and speak in the same instant (iOS drops the speech), keep a reference to the utterance */
+let UTT=null,AUD_OK=false,hintShown=false;
+function unlockAudio(){if(AUD_OK)return;AUD_OK=true;try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+ try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume&&AC.resume()}catch(e){}
+ try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}}
+document.addEventListener('pointerdown',unlockAudio,true);document.addEventListener('touchend',unlockAudio,true);
+const pickVoice=lang=>{try{const vs=speechSynthesis.getVoices();return vs.find(v=>v.lang===lang&&/premium|enhanced|natural/i.test(v.name))||vs.find(v=>v.lang===lang)||vs.find(v=>v.lang.replace('_','-').startsWith(lang.slice(0,2)))}catch(e){return null}};
+function say(txt,lang='en-GB'){if(lang==='en-GB-x')lang='en-GB';else if(S.lang==='en'&&lang==='en-GB'&&FRBY[txt]){txt=FRBY[txt];lang='fr-FR'}
+ if(!('speechSynthesis' in window)){toast('La voix n’est pas disponible sur cet appareil.');return}
+ unlockAudio();const clean=String(txt).replace(/\s\/\s/g,', ').replace(/\(.*?\)/g,'').trim();if(!clean)return;
+ const ss=speechSynthesis;
+ const go=()=>{try{const u=new SpeechSynthesisUtterance(clean);u.lang=lang;const v=pickVoice(lang);if(v)u.voice=v;u.rate=.9;u.volume=1;UTT=u;let started=false;u.onstart=()=>{started=true};u.onend=()=>{if(UTT===u)UTT=null};
+  if(ss.paused)ss.resume();ss.speak(u);
+  setTimeout(()=>{if(!started&&!ss.speaking&&!hintShown){hintShown=true;toast('Pas de son ? Désactive le mode silencieux de l’iPhone et monte le volume.')}},2500)}catch(e){}};
+ if(ss.speaking||ss.pending){ss.cancel();setTimeout(go,120)}else go()}
 function sndIcon(){$('#snd').innerHTML=S.sound?'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="#fff"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z" fill="#fff"/><path d="M16 9l5 6M21 9l-5 6"/></svg>';$('#snd').setAttribute('aria-label',S.sound?'Couper le son':'Activer le son')}
 
 /* ---------- learning model (Leitner boxes 0-5 per word and mode) ---------- */
@@ -547,7 +576,7 @@ function answer(x){
  const fb=$('#fb');
  const msg=ok?(res===1?'Presque parfait !':['Bravo !','Exact !','Bien joué !','Parfait !'][Math.floor(Math.random()*4)]):(x===null?'Pas de souci, voici la réponse':'Raté…');
  fb.className='fb '+(ok?'ok':'ko');
- fb.innerHTML=`<div class="fbin"><img src="${esc(w.img)}" alt=""><div><h3>${msg} ${ok?`<span class="small">+${gain} milles</span>`:''}</h3>
+ fb.innerHTML=`<div class="fbin"><img src="${esc(w.img)}" alt="Voir la fiche du mot" data-wid="${w.id}"><div><h3>${msg} ${ok?`<span class="small">+${gain} milles</span>`:''}</h3>
   <div style="font-weight:800">${esc(w.fr)} = ${esc(w.en)} ${w.us?`<span class="us">US : ${esc(w.us)}</span>`:''} <button class="say" id="sayf" aria-label="Écouter" style="width:36px;height:36px">${SPK}</button></div>
   ${res===1?`<div class="small">Orthographe exacte : ${esc(a==='en'?w.en:w.fr)}</div>`:''}</div>
   ${chrono?'':`<button class="btn wide" id="nx" style="background:${ok?'var(--ok)':'var(--ko)'}">${Q.i+1>=Q.n?'Voir mon résultat':'Continuer'}</button>`}</div>`;
@@ -579,7 +608,7 @@ function end(){
  <div class="big" style="margin:10px 0 2px">+${R.score}</div><div class="mut">milles gagnés</div>
  <div class="kpis"><div class="kpi"><b>${R.ok}/${asked}</b><span>bonnes réponses</span></div><div class="kpi"><b>${pc}%</b><span>réussite</span></div><div class="kpi"><b>${R.best}</b><span>meilleure série</span></div></div>
  <div class="row wrap" style="margin-top:16px"><button class="btn sun" id="again" style="flex:1">Rejouer</button><button class="btn ghost" id="share" style="flex:1">Défier un ami</button></div></div>
- ${R.misses.length?`<h2>À revoir (${R.misses.length})</h2><div class="card" style="padding:4px 14px">${R.misses.map(m=>`<div class="miss">${thumb(m.w)}<div><b>${esc(m.w.fr)}</b><div class="seatxt">${esc(m.w.en)}</div>${m.given?`<div class="mut small">Ta réponse : ${esc(m.given)}</div>`:''}</div><button class="say" data-say="${esc(m.w.en)}" aria-label="Écouter">${SPK}</button></div>`).join('')}</div><button class="btn wide" id="rev" style="margin-top:12px">Revoir ces mots maintenant</button>`:''}
+ ${R.misses.length?`<h2>À revoir (${R.misses.length})</h2><div class="card" style="padding:4px 14px">${R.misses.map(m=>`<div class="miss" data-wid="${m.w.id}">${thumb(m.w)}<div><b>${esc(m.w.fr)}</b><div class="seatxt">${esc(m.w.en)}</div>${m.given?`<div class="mut small">Ta réponse : ${esc(m.given)}</div>`:''}</div><button class="say" data-say="${esc(m.w.en)}" aria-label="Écouter">${SPK}</button></div>`).join('')}</div><button class="btn wide" id="rev" style="margin-top:12px">Revoir ces mots maintenant</button>`:''}
  <button class="btn ghost wide" id="hm" style="margin-top:12px">Retour à l’accueil</button>`;
  $('#again').onclick=()=>start(R.cfg.daily?{...S.cfg}:R.cfg);
  $('#hm').onclick=()=>go('home');
@@ -594,7 +623,7 @@ function end(){
 let lexMode='list',lexQ='',lexTh='',fcI=0,fcList=[];
 function lex(){
  const list=W.filter(w=>(!lexTh||w.s===lexTh)&&(!lexQ||norm(w.fr+' '+w.en+' '+w.us).includes(norm(lexQ))));
- V.innerHTML=`<h1>Lexique</h1><p class="mut" style="margin:6px 0 12px">${W.length} mots, en français et en anglais britannique. Touche le haut-parleur pour écouter.</p>
+ V.innerHTML=`<h1>Lexique</h1><p class="mut" style="margin:6px 0 12px">${W.length} mots, en français et en anglais britannique. Touche un mot pour voir sa fiche, ou le haut-parleur pour l’écouter.</p>
  <div class="seg" id="lm" style="margin-bottom:12px"><button data-v="list" aria-pressed="${lexMode==='list'}">Liste</button><button data-v="cards" aria-pressed="${lexMode==='cards'}">Cartes mémoire</button></div>
  <div class="chips hscroll" style="margin-bottom:12px"><button class="chip" data-t="" aria-pressed="${!lexTh}">Tous</button>${SECS.map(s=>`<button class="chip" data-t="${esc(s.id)}" style="--c:${esc(s.color)}" aria-pressed="${lexTh===s.id}">${esc(s.title)}</button>`).join('')}</div>
  <div id="lexbody"></div>
@@ -604,14 +633,14 @@ function lex(){
  const body=$('#lexbody');
  if(lexMode==='list'){
   body.innerHTML=`<input class="search" id="lq" type="search" placeholder="Chercher en français ou en anglais" value="${esc(lexQ)}" style="margin-bottom:12px" aria-label="Chercher un mot"><div class="lex" id="ll"></div>`;
-  const draw=()=>{const l=W.filter(w=>(!lexTh||w.s===lexTh)&&(!lexQ||norm(w.fr+' '+w.en+' '+w.us).includes(norm(lexQ))));$('#ll').innerHTML=l.length?l.map(w=>{const lv=allLevel(w);return`<div class="lexrow" style="--c:${esc(SEC[w.s].color)}">${thumb(w)}<div><div class="fr">${esc(w.fr)}</div><div class="en">${esc(w.en)} ${w.us?`<span class="us">US : ${esc(w.us)}</span>`:''}</div><div class="dots" title="Maîtrise ${lv}/5">${[1,2,3,4,5].map(i=>`<i class="${i<=lv?'on':''}"></i>`).join('')}</div></div><button class="say" data-say="${esc(w.en)}" aria-label="Écouter ${esc(w.en)}">${SPK}</button></div>`}).join(''):'<p class="mut" style="padding:20px;text-align:center">Aucun mot ne correspond.</p>';$('#ll').querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>say(b.dataset.say))};
+  const draw=()=>{const l=W.filter(w=>(!lexTh||w.s===lexTh)&&(!lexQ||norm(w.fr+' '+w.en+' '+w.us).includes(norm(lexQ))));$('#ll').innerHTML=l.length?l.map(w=>{const lv=allLevel(w);return`<div class="lexrow" data-wid="${w.id}" style="--c:${esc(SEC[w.s].color)}">${thumb(w)}<div><div class="fr">${esc(w.fr)}</div><div class="en">${esc(w.en)} ${w.us?`<span class="us">US : ${esc(w.us)}</span>`:''}</div><div class="dots" title="Maîtrise ${lv}/5">${[1,2,3,4,5].map(i=>`<i class="${i<=lv?'on':''}"></i>`).join('')}</div></div><button class="say" data-say="${esc(w.en)}" aria-label="Écouter ${esc(w.en)}">${SPK}</button></div>`}).join(''):'<p class="mut" style="padding:20px;text-align:center">Aucun mot ne correspond.</p>';$('#ll').querySelectorAll('[data-say]').forEach(b=>b.onclick=e=>{e.stopPropagation();say(b.dataset.say)})};
   draw();$('#lq').oninput=e=>{lexQ=e.target.value;draw()};
  }else{
   if(!fcList.length||fcI===0)fcList=shuffle(list.slice());
   if(fcI>=fcList.length){body.innerHTML=`<div class="card" style="text-align:center"><h3>Paquet terminé !</h3><p class="mut">${fcList.length} cartes revues.</p><button class="btn sun" id="fcr">Recommencer</button></div>`;$('#fcr').onclick=()=>{fcI=0;lex()};return}
   const w=fcList[fcI];
   body.innerHTML=`<div class="mut small" style="margin-bottom:6px">Carte ${fcI+1} sur ${fcList.length} · touche la carte pour la retourner</div>
-  <div class="flash"><button class="fc" id="fc" aria-label="Retourner la carte"><div class="face">${thumb(w).replace(' loading="lazy"','')}<p>Comment ça s’appelle ?</p></div><div class="face back"><div class="f1">${esc(w.fr)}</div><div class="f2">${esc(w.en)}</div>${w.us?`<div><span class="us">US : ${esc(w.us)}</span></div>`:''}</div></button></div>
+  <div class="flash"><button class="fc" id="fc" aria-label="Retourner la carte"><div class="face">${thumb(w).replace(' loading="lazy"','')}<p>Comment ça s’appelle ?</p></div><div class="face back"><div class="f1">${esc(w.fr)}</div><div class="f2">${esc(w.en)}</div>${w.us?`<div><span class="us">US : ${esc(w.us)}</span></div>`:''}${w.dfr?`<div class="f3">${esc(w.dfr)}</div>`:''}</div></button></div>
   <div class="row" style="margin-top:12px"><button class="btn ghost" id="fk" style="flex:1">À revoir</button><button class="say" id="fs" aria-label="Écouter">${SPK}</button><button class="btn" id="fy" style="flex:1;background:var(--ok)">Je savais</button></div>`;
   $('#fc').onclick=()=>$('#fc').classList.toggle('flip');
   $('#fs').onclick=()=>say(w.en);
@@ -629,7 +658,7 @@ function prog(){
  <div class="gauges">${[['en','Depuis l’anglais','#1f3f8f'],['fr','Depuis le français','#e2353d'],['img','Depuis la photo','#1f9d55'],['audio','À l’oreille','#0b5c8f']].map(([q,l,c])=>`<div class="gauge">${ring(mastery(q),c)}<b>${l}</b><span>${acc(q)}</span></div>`).join('')}</div>
  <h2>Signaux</h2><div class="card"><div class="trow" style="--c:#d7262e"><span>Pavillons <span class="mut small">${PAV.length}</span></span><b>${fMastery()}%</b><div class="bar"><i style="width:${fMastery()}%"></i></div></div>${Object.entries(SIGSETS).map(([k,st])=>`<div class="trow" style="--c:${st.col}"><span>${st.title} <span class="mut small">${st.items.length}</span></span><b>${xMastery(k,st.items)}%</b><div class="bar"><i style="width:${xMastery(k,st.items)}%"></i></div></div>`).join('')}</div>
  <h2>Par thème</h2><div class="card">${SECS.map(s=>{const l=W.filter(w=>w.s===s.id);const p=Math.round(100*l.reduce((t,w)=>t+allLevel(w),0)/(5*l.length));return`<div class="trow" style="--c:${esc(s.color)}"><span>${esc(s.title)} <span class="mut small">${l.length} mots</span></span><b>${p}%</b><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}</div>
- <h2>Mots difficiles</h2>${hard.length?`<div class="card" style="padding:4px 14px">${hard.map(w=>`<div class="miss">${thumb(w)}<div><b>${esc(w.fr)}</b><div class="seatxt">${esc(w.en)}</div></div><span class="mut small">${S.wrong[w.id]} erreur${S.wrong[w.id]>1?'s':''}</span></div>`).join('')}</div><button class="btn wide" id="rv" style="margin-top:12px">Réviser ces mots</button>`:'<p class="mut">Aucun pour le moment. Les mots ratés apparaîtront ici.</p>'}
+ <h2>Mots difficiles</h2>${hard.length?`<div class="card" style="padding:4px 14px">${hard.map(w=>`<div class="miss" data-wid="${w.id}">${thumb(w)}<div><b>${esc(w.fr)}</b><div class="seatxt">${esc(w.en)}</div></div><span class="mut small">${S.wrong[w.id]} erreur${S.wrong[w.id]>1?'s':''}</span></div>`).join('')}</div><button class="btn wide" id="rv" style="margin-top:12px">Réviser ces mots</button>`:'<p class="mut">Aucun pour le moment. Les mots ratés apparaîtront ici.</p>'}
  <h2>Badges <span class="mut small">${S.badges.length}/${BADGES.length}</span></h2><div class="badges">${BADGES.map(badgeHtml).join('')}</div>
  <h2>Carnet de bord</h2><div class="kpis"><div class="kpi"><b>${S.quizzes}</b><span>quiz joués</span></div><div class="kpi"><b>${S.bestChrono}</b><span>record Chrono</span></div><div class="kpi"><b>${S.streak}</b><span>jours d’affilée</span></div></div>
  <h2>Changer de téléphone</h2><div class="card"><p class="mut small" style="margin:0 0 10px">Crée un code sur ce téléphone, puis tape-le sur le nouveau : tes milles, grades, badges et révisions te suivent. Le code est valable 15 minutes et ne sert qu’une fois.</p><div class="row wrap"><button class="btn" id="mkcode" style="flex:1">Créer un code</button><button class="btn ghost" id="usecode" style="flex:1">J’ai un code</button></div><div id="codeout"></div></div>
@@ -1141,6 +1170,21 @@ function importUI(confirmFirst){const m=document.createElement('div');m.classNam
 /* ---------- HORS CONNEXION ---------- */
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 addEventListener('online',()=>{pushScore();topAt=0;loadTop3(true)});
+/* ---------- FICHE D'UN MOT ---------- */
+function wordSheet(w){if(!w)return;const sec=SEC[w.s],lv=allLevel(w);const m=document.createElement('div');m.className='modal sheet';
+ m.innerHTML=`<div class="card wsheet pop" role="dialog" aria-modal="true" aria-label="Fiche du mot ${esc(w.fr)}">
+ <button class="wx" aria-label="Fermer"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+ <div class="wimg"><img src="${esc(w.img)}" alt="${esc(w.fr)}"></div>
+ <div class="wbody"><span class="chip" style="--c:${esc(sec?.color||'#0b5c8f')};pointer-events:none" aria-pressed="true">${esc(sec?.title||'')}</span>
+ <h2>${esc(w.fr)}</h2><div class="wen">${esc(w.en)} ${w.us?`<span class="us">US : ${esc(w.us)}</span>`:''}</div>
+ <div class="wsay"><button data-l="en">${SPK}<span>Anglais</span></button><button data-l="fr">${SPK}<span>Français</span></button></div>
+ ${w.dfr?`<p class="wdef">${esc(w.dfr)}</p><p class="wdef en" lang="en">${esc(w.den)}</p>`:''}
+ <div class="row" style="margin-top:14px;justify-content:space-between"><span class="mut small">Maîtrise</span><div class="dots">${[1,2,3,4,5].map(i=>`<i class="${i<=lv?'on':''}"></i>`).join('')}</div></div>
+ ${w.c?`<p class="mut small" style="margin:10px 0 0">Photo : <a href="${/^https:\/\//.test(w.c.url)?esc(w.c.url):'#'}" style="color:inherit;overflow-wrap:anywhere">${esc(w.c.file)}</a> (Wikimedia Commons)</p>`:'<p class="mut small" style="margin:10px 0 0">Dessin réalisé pour cette app.</p>'}</div></div>`;
+ document.body.appendChild(m);const close=()=>m.remove();m.querySelector('.wx').onclick=close;m.onclick=e=>{if(e.target===m)close()};
+ m.querySelector('[data-l="en"]').onclick=()=>say(w.en,'en-GB-x');m.querySelector('[data-l="fr"]').onclick=()=>say(w.fr,'fr-FR');
+ const k=e=>{if(e.key==='Escape'){close();removeEventListener('keydown',k)}};addEventListener('keydown',k);setTimeout(()=>m.querySelector('.wx').focus(),50)}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-wid]');if(!t||e.target.closest('.say,button:not([data-wid])'))return;wordSheet(W.find(w=>String(w.id)===t.dataset.wid))});
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{if(!Q)return;if(e.target.tagName==='INPUT'&&e.key!=='Enter')return;if(!Q.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(Q.locked&&e.key==='Enter'&&$('#nx')){e.preventDefault();$('#nx').click()}});
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(!S.name)return;if(FQ||MQ){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>go(b.dataset.go));return}if(Q){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>{stopQ();go(b.dataset.go)})}else go(b.dataset.go)});
@@ -1149,7 +1193,7 @@ try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}catch(e){
 
 /* ---------- boot ---------- */
 V.innerHTML='<p class="mut" style="text-align:center;padding:40px 0">Chargement du lexique…</p>';
-fetch('lexique.json').then(r=>r.json()).then(d=>{SECS=d.secs;W=d.words;W.forEach(w=>FRBY[w.en]=w.fr);SECS.forEach(s=>SEC[s.id]=s);if(!S.pid){S.pid='p'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,20):Math.random().toString(36).slice(2)+Date.now().toString(36));save()}if(!S.secMig){S.wPts=Math.max(0,S.pts-S.fPts);S.secMig=1;save()}header();if(S.name){go('home');pushScore()}else gate()}).catch(()=>{V.innerHTML='<div class="card"><h3>Impossible de charger le lexique</h3><p class="mut">Vérifie ta connexion puis recharge la page.</p></div>'});
+fetch('lexique.json?v=2').then(r=>r.json()).then(d=>{SECS=d.secs;W=d.words;W.forEach(w=>FRBY[w.en]=w.fr);SECS.forEach(s=>SEC[s.id]=s);if(!S.pid){S.pid='p'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,20):Math.random().toString(36).slice(2)+Date.now().toString(36));save()}if(!S.secMig){S.wPts=Math.max(0,S.pts-S.fPts);S.secMig=1;save()}header();if(S.name){go('home');pushScore()}else gate()}).catch(()=>{V.innerHTML='<div class="card"><h3>Impossible de charger le lexique</h3><p class="mut">Vérifie ta connexion puis recharge la page.</p></div>'});
 }
 </script>
 </body>
