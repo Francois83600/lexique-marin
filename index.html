@@ -383,7 +383,11 @@ function sfx(t){if(!S.sound)return;try{AC=AC||new (window.AudioContext||window.w
 /* Sound: keep it as simple as iPhone likes it. Speak synchronously inside the tap, set only the language
    (no voice object: a listed but not downloaded voice can be silent), keep a reference to the utterance. */
 let UTT=null,hintShown=false,SPLOG=[];
-function audioUnlock(){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){}}
+let SILENT=null;
+function silentUrl(){const n=4000,b=new ArrayBuffer(44+n),v=new DataView(b);const w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);for(let i=0;i<n;i++)v.setUint8(44+i,128);return URL.createObjectURL(new Blob([b],{type:'audio/wav'}))}
+function keepPlayback(){try{if(!SILENT){SILENT=new Audio(silentUrl());SILENT.loop=true;SILENT.setAttribute('playsinline','');SILENT.preload='auto'}if(SILENT.paused)SILENT.play().catch(()=>{})}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&SILENT)SILENT.pause()});
+function audioUnlock(){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}keepPlayback();try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){}}
 document.addEventListener('touchend',audioUnlock,{capture:true,passive:true});document.addEventListener('click',audioUnlock,true);
 function speakNow(clean,lang,useVoice){const ss=speechSynthesis;const u=new SpeechSynthesisUtterance(clean);if(lang)u.lang=lang;
  if(useVoice){try{const v=speechSynthesis.getVoices().find(v=>v.lang.replace('_','-')===lang);if(v)u.voice=v}catch(e){}}
@@ -668,7 +672,7 @@ function prog(){
  <h2>Changer de téléphone</h2><div class="card"><p class="mut small" style="margin:0 0 10px">Crée un code sur ce téléphone, puis tape-le sur le nouveau : tes milles, grades, badges et révisions te suivent. Le code est valable 15 minutes et ne sert qu’une fois.</p><div class="row wrap"><button class="btn" id="mkcode" style="flex:1">Créer un code</button><button class="btn ghost" id="usecode" style="flex:1">J’ai un code</button></div><div id="codeout"></div></div>
  <button class="btn ghost wide" id="rename" style="margin-top:22px">Changer de prénom</button>
  <button class="btn ghost wide" id="reset" style="margin-top:10px">Remettre à zéro ma progression</button>
- <p class="mut small" style="text-align:center">Ta progression reste sur cet appareil, dans ce navigateur.</p>`;
+ <p class="mut small" style="text-align:center">Ta progression reste sur cet appareil, dans ce navigateur.<br>Version ${APPV}</p>`;
  $('#rv')?.addEventListener('click',()=>start({...S.cfg,src:'err'}));
  {const info=()=>{let vs=[];try{vs=speechSynthesis.getVoices()}catch(e){}const en=vs.filter(v=>/^en/i.test(v.lang)).length,fr=vs.filter(v=>/^fr/i.test(v.lang)).length;$('#spinfo').textContent=`Synthèse vocale : ${'speechSynthesis' in window?'présente':'absente'} · voix installées : ${vs.length} (anglais ${en}, français ${fr}) · mode app : ${matchMedia('(display-mode: standalone)').matches||navigator.standalone?'oui':'non'}`};info();try{speechSynthesis.onvoiceschanged=info}catch(e){}
   $('#t1').onclick=()=>{const was=S.sound;S.sound=true;sfx('badge');S.sound=was;const l=$('#splog');SPLOG.push('bip joué (son de l’app '+(was?'activé':'coupé')+')');l.textContent=SPLOG.join('\n')};
@@ -1175,7 +1179,9 @@ function importUI(confirmFirst){const m=document.createElement('div');m.classNam
  m.querySelector('[data-yes]').onclick=async()=>{const b=m.querySelector('[data-yes]');b.disabled=true;m.querySelector('#tcm').textContent='';const err=await importCode(m.querySelector('#tci').value);b.disabled=false;
   if(err){m.querySelector('#tcm').textContent=err;return}m.remove();header();toast('Progression récupérée, bon retour à bord '+S.name+' !');topAt=0;go('home');pushScore()}}
 /* ---------- HORS CONNEXION ---------- */
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+const APPV='2026-11-24 v9';
+if('serviceWorker' in navigator&&location.protocol==='https:'){const hadCtrl=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{r.update();document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update()})}).catch(()=>{});
+ let reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtrl||reloading)return;reloading=true;const go_=()=>{if(Q||FQ||MQ){setTimeout(go_,3000);return}location.reload()};go_()})}
 addEventListener('online',()=>{pushScore();topAt=0;loadTop3(true)});
 /* ---------- FICHE D'UN MOT ---------- */
 function wordSheet(w){if(!w)return;const sec=SEC[w.s],lv=allLevel(w);const m=document.createElement('div');m.className='modal sheet';
