@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Classement : tout le monde lit ; chaque joueur écrit sa ligne (prénom + points).
+    match /scores/{playerId} {
+      allow read: if true;
+      allow create, update: if playerId.size() <= 40
+        && request.resource.data.keys().hasOnly(['name', 'pts', 'at'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 20
+        && request.resource.data.pts is int
+        && request.resource.data.pts >= 0
+        && request.resource.data.pts <= 1000000
+        && (resource == null || request.resource.data.pts >= resource.data.pts);
+      allow delete: if false;
+    }
+  }
+}
