@@ -30,5 +30,21 @@ service cloud.firestore {
         && request.resource.data.get('dayPts', 0) <= 5000;
       allow delete: if false;
     }
+    // Transfert de progression vers un autre téléphone : code à 6 caractères,
+    // valable 15 minutes, lisible seulement par qui connaît le code, effacé après usage.
+    match /transfer/{code} {
+      allow create: if request.auth != null
+        && code.size() == 6
+        && request.resource.data.keys().hasOnly(['s', 'rt', 'uid', 'exp'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.s is string
+        && request.resource.data.s.size() < 300000
+        && request.resource.data.rt is string
+        && request.resource.data.exp is timestamp
+        && request.resource.data.exp > request.time
+        && request.resource.data.exp < request.time + duration.value(20, 'm');
+      allow get: if resource.data.exp > request.time;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
   }
 }

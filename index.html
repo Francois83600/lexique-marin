@@ -200,6 +200,9 @@ details a{color:inherit;overflow-wrap:anywhere}
 @media (prefers-reduced-motion:reduce){.conf{display:none}.pop{animation:none}.fc{transition:none}.fb{transition:none}}
 @media (min-width:600px){.opts:not(.pics){grid-template-columns:repeat(2,minmax(0,1fr))}h1{font-size:2.4rem}}
 .hidden{display:none!important}
+.tcode{font:800 clamp(2.4rem,12vw,3.4rem)/1 var(--disp);letter-spacing:.18em;text-align:center;color:var(--seatxt);margin:10px 0 4px}
+.codein{text-transform:uppercase;letter-spacing:.3em;text-align:center;font-weight:800;font-size:1.4rem}
+.linkbtn{border:0;background:transparent;color:var(--seatxt);font-weight:800;text-decoration:underline;padding:10px;min-height:44px}
 .map{background:linear-gradient(#cfe9f7,#9fd2ee);border-radius:20px;border:1px solid var(--line);overflow:hidden}
 .map svg{width:100%;height:auto;display:block}
 .map .port{cursor:pointer}
@@ -627,10 +630,13 @@ function prog(){
  <h2>Mots difficiles</h2>${hard.length?`<div class="card" style="padding:4px 14px">${hard.map(w=>`<div class="miss">${thumb(w)}<div><b>${esc(w.fr)}</b><div class="seatxt">${esc(w.en)}</div></div><span class="mut small">${S.wrong[w.id]} erreur${S.wrong[w.id]>1?'s':''}</span></div>`).join('')}</div><button class="btn wide" id="rv" style="margin-top:12px">Réviser ces mots</button>`:'<p class="mut">Aucun pour le moment. Les mots ratés apparaîtront ici.</p>'}
  <h2>Badges <span class="mut small">${S.badges.length}/${BADGES.length}</span></h2><div class="badges">${BADGES.map(badgeHtml).join('')}</div>
  <h2>Carnet de bord</h2><div class="kpis"><div class="kpi"><b>${S.quizzes}</b><span>quiz joués</span></div><div class="kpi"><b>${S.bestChrono}</b><span>record Chrono</span></div><div class="kpi"><b>${S.streak}</b><span>jours d’affilée</span></div></div>
+ <h2>Changer de téléphone</h2><div class="card"><p class="mut small" style="margin:0 0 10px">Crée un code sur ce téléphone, puis tape-le sur le nouveau : tes milles, grades, badges et révisions te suivent. Le code est valable 15 minutes et ne sert qu’une fois.</p><div class="row wrap"><button class="btn" id="mkcode" style="flex:1">Créer un code</button><button class="btn ghost" id="usecode" style="flex:1">J’ai un code</button></div><div id="codeout"></div></div>
  <button class="btn ghost wide" id="rename" style="margin-top:22px">Changer de prénom</button>
  <button class="btn ghost wide" id="reset" style="margin-top:10px">Remettre à zéro ma progression</button>
  <p class="mut small" style="text-align:center">Ta progression reste sur cet appareil, dans ce navigateur.</p>`;
  $('#rv')?.addEventListener('click',()=>start({...S.cfg,src:'err'}));
+ $('#mkcode').onclick=async()=>{const o=$('#codeout'),b=$('#mkcode');b.disabled=true;o.innerHTML='<p class="mut small">Création du code…</p>';const r=await exportCode();b.disabled=false;o.innerHTML=r.ok?`<div class="tcode">${esc(r.code)}</div><p class="mut small" style="text-align:center;margin:0">À taper sur le nouveau téléphone dans les 15 minutes : « J’ai déjà joué sur un autre téléphone ».</p>`:`<p class="small" style="color:var(--ko)">${esc(r.msg)}</p>`};
+ $('#usecode').onclick=()=>importUI(true);
  $('#rename').onclick=()=>{modal(`<h3>Nouveau prénom</h3><input id="rn" class="search" style="border-radius:14px;margin-top:10px" maxlength="20" value="${esc(S.name)}">`,()=>{});const m=document.querySelector('.modal');const y=m.querySelector('[data-yes]');y.style.background='var(--sea)';y.onclick=()=>{const v=m.querySelector('#rn').value.trim().slice(0,20);if(v){S.name=v;save();pushScore();toast('Prénom changé')}m.remove();prog()}};
  $('#reset').onclick=()=>modal('<h3>Tout remettre à zéro ?</h3><p class="mut">Milles, badges et maîtrise des mots seront effacés de cet appareil.</p>',()=>{const keep={name:S.name,sound:S.sound,cfg:S.cfg,pid:S.pid,uid:S.uid,rt:S.rt,secMig:1};S=Object.assign(structuredClone(FRESH),keep);save();header();prog();toast('Progression remise à zéro')});
 }
@@ -662,7 +668,7 @@ function renderTop3(){const el=$('#top3');if(!el)return;const tab=boardTab;
  const head=`<h3 style="font-size:1.3rem;margin-bottom:8px">Les 3 meilleurs marins</h3><div class="btabs" id="btabs">${BTABS.map(([k,l])=>`<button data-b="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>`;
  let body;
  if(!FBON)body='<p class="mut small" style="margin:0">Le classement commun arrive bientôt.</p>';
- else if(TOP===null)body=`<p class="mut small" style="margin:0">${topErr?'Classement injoignable pour le moment (connexion ?).':'Chargement du classement…'}</p>`;
+ else if(TOP===null)body=`<p class="mut small" style="margin:0">${!navigator.onLine?'Hors connexion : le classement reviendra avec le réseau. Tes points seront envoyés automatiquement.':topErr?'Classement injoignable pour le moment (connexion ?).':'Chargement du classement…'}</p>`;
  else{const L=boardList(tab),top=L.slice(0,3),mine=myVal(tab),meIn=top.some(r=>r.id===S.uid);
   if(!top.length)body=`<p class="mut small" style="margin:0">${tab==='day'?'Personne n’a encore relevé le défi du jour : à toi de commencer !':tab==='week'?'Personne cette semaine : prends la tête !':'Personne encore : termine un quiz pour prendre la tête !'}</p>`;
   else{const order=[top[1],top[0],top[2]],place=[2,1,3];
@@ -694,8 +700,9 @@ function gate(){view='gate';$('#nav').classList.add('hidden');
  <div class="flag" style="margin:0 auto 14px;width:84px;height:60px">${flag('P')}</div>
  <h1>Bienvenue à bord !</h1><p class="mut" style="margin:8px 0 18px">Apprends le vocabulaire marin en anglais et en français, gagne des milles et grimpe les grades. Pour commencer, dis-nous ton prénom.</p>
  <form id="gf"><input id="gn" class="search" style="border-radius:14px;text-align:center;font-weight:800" placeholder="Ton prénom" maxlength="20" autocomplete="given-name" required aria-label="Ton prénom"><button class="btn sun wide" style="margin-top:12px;min-height:56px;font-size:1.1rem">Jouer</button></form>
- <p class="mut small" style="margin:14px 0 0">Pas d’inscription. Ton prénom et tes points apparaissent dans le top 3 si tu montes sur le podium.</p></div>`;
+ <p class="mut small" style="margin:14px 0 0">Pas d’inscription. Ton prénom et tes points apparaissent dans le top 3 si tu montes sur le podium.</p><button class="linkbtn" id="gimp">J’ai déjà joué sur un autre téléphone</button></div>`;
  $('#gf').onsubmit=e=>{e.preventDefault();const v=$('#gn').value.trim().slice(0,20);if(!v)return;S.name=v;save();pushScore();go('home')};
+ $('#gimp').onclick=()=>importUI(false);
  setTimeout(()=>$('#gn')?.focus(),80);
 }
 /* ---------- GENERIC MCQ ENGINE (phrases, signals, VHF, duel) ---------- */
@@ -1089,6 +1096,31 @@ function voyage(){view='voyage';Q=null;document.body.classList.remove('inquiz');
 const GI2={duel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l8-8M14.5 4.5l5 5-7 7-5-5zM20 20l-8-8M9.5 4.5l-5 5 7 7"/></svg>',map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>'};
 GAMES.unshift({id:'voy',title:'Le voyage',sub:'7 escales de Saint-Malo à Bilbao, à débloquer',col:'#1f9d55',icon:GI2.map,pc:()=>Math.min(S.voy,PORTS.length)+'/'+PORTS.length,run:voyage});
 GAMES.push({id:'duel',title:'Duel à deux',sub:'Sur le même téléphone, chacun son tour',col:'#e2353d',icon:GI2.duel,pc:()=>'',run:duelSetup});
+/* ---------- TRANSFERT PAR CODE ---------- */
+const TALPHA='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+async function exportCode(){if(!FBON)return{ok:false,msg:'Classement non configuré.'};if(!navigator.onLine)return{ok:false,msg:'Il faut du réseau pour créer un code.'};
+ const a=await fbAuth();if(!a||!S.rt)return{ok:false,msg:'Connexion impossible, réessaie dans un instant.'};
+ const st={...S};delete st.rt;delete st.pushedKey;const exp=new Date(Date.now()+15*60000).toISOString();
+ for(let t=0;t<4;t++){const rnd=crypto.getRandomValues(new Uint32Array(6));const code=[...rnd].map(n=>TALPHA[n%TALPHA.length]).join('');
+  try{const r=await fetch(FBBASE+'/transfer/'+code+'?currentDocument.exists=false&key='+encodeURIComponent(FB.apiKey),{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+a.token},body:JSON.stringify({fields:{s:{stringValue:JSON.stringify(st)},rt:{stringValue:S.rt},uid:{stringValue:a.uid},exp:{timestampValue:exp}}})});
+   if(r.ok)return{ok:true,code};}catch(e){return{ok:false,msg:'Réseau indisponible.'}}}
+ return{ok:false,msg:'Création du code impossible, réessaie.'}}
+async function importCode(code){code=code.toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6)return'Le code fait 6 caractères.';
+ try{const r=await fetch(FBBASE+'/transfer/'+code+'?key='+encodeURIComponent(FB.apiKey));if(!r.ok)return'Code inconnu ou expiré.';const d=await r.json();const f=d.fields||{};
+  const st=JSON.parse(f.s?.stringValue||'{}');if(!st||typeof st!=='object'||!st.name)return'Code invalide.';
+  S=Object.assign(structuredClone(FRESH),st,{rt:f.rt?.stringValue||'',uid:f.uid?.stringValue||'',pushedKey:''});AUTH=null;save();
+  const a=await fbAuth();if(a&&a.uid===f.uid?.stringValue){fetch(FBBASE+'/transfer/'+code+'?key='+encodeURIComponent(FB.apiKey),{method:'DELETE',headers:{'Authorization':'Bearer '+a.token}}).catch(()=>{})}
+  return''}catch(e){return'Réseau indisponible.'}}
+function importUI(confirmFirst){const m=document.createElement('div');m.className='modal';
+ m.innerHTML=`<div class="card pop" role="dialog" aria-modal="true"><h3>Récupérer ma progression</h3><p class="mut small" style="margin:6px 0 10px">Sur l’ancien téléphone : onglet Progrès, « Créer un code ».${confirmFirst?' La progression actuelle de ce téléphone sera remplacée.':''}</p>
+ <input id="tci" class="search codein" maxlength="7" autocomplete="off" autocapitalize="characters" placeholder="ABC123" aria-label="Code de transfert"><p class="small" id="tcm" style="color:var(--ko);min-height:1.2em;margin:6px 0 0"></p>
+ <div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn ghost" data-no>Annuler</button><button class="btn" data-yes>Récupérer</button></div></div>`;
+ document.body.appendChild(m);m.querySelector('[data-no]').onclick=()=>m.remove();setTimeout(()=>m.querySelector('#tci').focus(),60);
+ m.querySelector('[data-yes]').onclick=async()=>{const b=m.querySelector('[data-yes]');b.disabled=true;m.querySelector('#tcm').textContent='';const err=await importCode(m.querySelector('#tci').value);b.disabled=false;
+  if(err){m.querySelector('#tcm').textContent=err;return}m.remove();header();toast('Progression récupérée, bon retour à bord '+S.name+' !');topAt=0;go('home');pushScore()}}
+/* ---------- HORS CONNEXION ---------- */
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+addEventListener('online',()=>{pushScore();topAt=0;loadTop3(true)});
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{if(!Q)return;if(e.target.tagName==='INPUT'&&e.key!=='Enter')return;if(!Q.locked&&/^[1-4]$/.test(e.key)){const b=V.querySelector(`.opt[data-i="${+e.key-1}"]`);if(b&&!b.disabled)b.click()}else if(Q.locked&&e.key==='Enter'&&$('#nx')){e.preventDefault();$('#nx').click()}});
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(!S.name)return;if(FQ||MQ){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>go(b.dataset.go));return}if(Q){modal('<h3>Quitter le quiz ?</h3><p class="mut">Les milles déjà gagnés sont conservés.</p>',()=>{stopQ();go(b.dataset.go)})}else go(b.dataset.go)});
